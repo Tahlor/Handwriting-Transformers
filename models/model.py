@@ -20,6 +20,7 @@ import cv2
 import time
 import matplotlib.pyplot as plt
 import shutil
+import matplotlib.pyplot as plt
 
 def get_rgb(x):
   R = 255 - int(int(x>0.5)*255*(x-0.5)/0.5)
@@ -387,7 +388,7 @@ class TRGAN(nn.Module):
 
         for step,data in enumerate(dataloader): 
 
-            ST = data['simg'].cuda()
+            ST = data['imgs_padded'].cuda()
             self.fakes = self.netG.Eval(ST, self.eval_text_encode) 
             fake_images = torch.cat(self.fakes, 1).detach().cpu().numpy()
 
@@ -421,7 +422,7 @@ class TRGAN(nn.Module):
 
         for step,data in enumerate(dataset_real): 
 
-            real_images = data['simg'].numpy()
+            real_images = data['imgs_padded'].numpy()
 
             for i in range(real_images.shape[0]):
                 for j in range(real_images.shape[1]):
@@ -430,36 +431,134 @@ class TRGAN(nn.Module):
 
         return self.real_base, self.fake_base
 
-    def _generate_page(self, ST, SLEN, eval_text_encode = None, eval_len_text = None):
+    def generate_word_list(self,style_images,
+                                style_lengths,
+                                style_references,
+                                author_ids,
+                                eval_text_encode = None,
+                                eval_len_text = None,
+                                source=""
+                            ):
+        """
 
+        Args:
+            style_images: style images
+            style_lengths: style image sizes?
+            eval_text_encode:
+            eval_len_text:
+
+        Returns:
+
+        """
         if eval_text_encode == None:
             eval_text_encode = self.eval_text_encode
         if eval_len_text == None:
             eval_len_text = self.eval_len_text
 
+        self.fakes = self.netG.Eval(style_images, eval_text_encode) # 52 x [8,1,32,160] ; [Batch, Channel, Line_Height, Line_Width]
+        output = []
+        # fake_[batch_idx
+        for batch_author_idx in range(batch_size):
+            author_id = author_ids[batch_author_idx]
+            words = []
+            output += [{"style_references":style_references[batch_author_idx],
+                                 "words":words,
+                                 "author":author_id,
+                                 "source":source}]
 
-        self.fakes = self.netG.Eval(ST, eval_text_encode)
+            if False:
+                word_index = 0
+                author_index = 0
+                channel = 0
+                width = eval_len_text[word_index]*resolution
+                plt.imshow(self.fakes[word_index][author_index,channel,:,:width].cpu().numpy()); plt.show()
+            for idx, _ in enumerate(self.fakes):
+                w = (self.fakes[idx][batch_author_idx, 0, :, :eval_len_text[idx] * resolution].cpu().numpy() + 1) / 2
+                words.append(w)
 
+        # plt.imshow(word_l[0]); plt.show()
+        return output
+
+    def plot_word_list(self, words):
+        for w in words:
+            self.plot(w)
+
+    @staticmethod
+    def plot(word):
+        plt.imshow(word, cmap='gray');
+        plt.show()
+
+    def generate_lines_from_words(self, word_list, words_per_line, max_line_width):
+        word_l = []
+        word_t = []
+
+        gap = np.ones([IMG_HEIGHT, 16])
+
+        line_wids = []
+
+        # Generate synthetic lines
+        # Loop through synthetically generated words
+        for idx, word in enumerate(word_list):
+            word_t.append(word)
+            word_t.append(gap)
+            current_width = np.sum(line_wids[idx])
+            if len(word_t) == 2 * words_per_line or idx == len(word_list) - 1 or current_width > max_line_width:
+                line_ = np.concatenate(word_t, -1)
+
+                word_l.append(line_)
+                line_wids.append(line_.shape[1])
+        return word_l, word_t
+
+
+    def _generate_page(self, ST, SLEN, eval_text_encode=None, eval_len_text=None, words_per_line=8, max_line_width=1000):
+        """
+
+        Args:
+            ST: style images
+            SLEN: style image sizes?
+            eval_text_encode:
+            eval_len_text:
+
+        Returns:
+
+        """
+        if eval_text_encode == None:
+            eval_text_encode = self.eval_text_encode
+        if eval_len_text == None:
+            eval_len_text = self.eval_len_text
+
+        self.fakes = self.netG.Eval(ST,
+                                    eval_text_encode)  # 52 x [8,1,32,160] ; [Batch, Channel, Line_Height, Line_Width]
+        # 8 - samples per page
+        #
         page1s = []
         page2s = []
 
         for batch_idx in range(batch_size):
-       
+
             word_t = []
             word_l = []
 
-            gap = np.ones([IMG_HEIGHT,16])
+            gap = np.ones([IMG_HEIGHT, 16])
 
             line_wids = []
 
+            # Generate synthetic lines
+
+            # Loop through synthetically generated words
+            if False:
+                word_index = 0
+                author_index = 0
+                width = eval_len_text[word_index] * resolution
+                plt.imshow(self.fakes[word_index][author_index, 0, :, :width].cpu().numpy());
+                plt.show()
+
             for idx, fake_ in enumerate(self.fakes):
 
-                word_t.append((fake_[batch_idx,0,:,:eval_len_text[idx]*resolution].cpu().numpy()+1)/2)
-
+                word_t.append((fake_[batch_idx, 0, :, :eval_len_text[idx] * resolution].cpu().numpy() + 1) / 2)
                 word_t.append(gap)
 
-                if len(word_t) == 16 or idx == len(self.fakes) - 1:
-
+                if len(word_t) == 2*words_per_line or idx == len(self.fakes) - 1 or current_width>max_line_width:
                     line_ = np.concatenate(word_t, -1)
 
                     word_l.append(line_)
@@ -467,40 +566,37 @@ class TRGAN(nn.Module):
 
                     word_t = []
 
+            gap_h = np.ones([16, max(line_wids)])
 
-            gap_h = np.ones([16,max(line_wids)])
+            page_ = []
 
-            page_= []
-
+            # Loop through lines and add vertical padding
             for l in word_l:
-
-                pad_ = np.ones([IMG_HEIGHT,max(line_wids) - l.shape[1]])
+                pad_ = np.ones([IMG_HEIGHT, max(line_wids) - l.shape[1]])
 
                 page_.append(np.concatenate([l, pad_], 1))
                 page_.append(gap_h)
 
-
-
             page1 = np.concatenate(page_, 0)
-
 
             word_t = []
             word_l = []
 
-            gap = np.ones([IMG_HEIGHT,16])
+            gap = np.ones([IMG_HEIGHT, 16])
 
             line_wids = []
 
+            ## Source images
             sdata_ = [i.unsqueeze(1) for i in torch.unbind(ST, 1)]
 
+            # Loop through source word images
             for idx, st in enumerate((sdata_)):
 
-                word_t.append((st[batch_idx,0,:,:int(SLEN.cpu().numpy()[batch_idx][idx])].cpu().numpy()+1)/2)
+                word_t.append((st[batch_idx, 0, :, :int(SLEN.cpu().numpy()[batch_idx][idx])].cpu().numpy() + 1) / 2)
 
                 word_t.append(gap)
 
                 if len(word_t) == 16 or idx == len(sdata_) - 1:
-
                     line_ = np.concatenate(word_t, -1)
 
                     word_l.append(line_)
@@ -508,56 +604,44 @@ class TRGAN(nn.Module):
 
                     word_t = []
 
+            gap_h = np.ones([16, max(line_wids)])
 
-            gap_h = np.ones([16,max(line_wids)])
+            page_ = []
 
-            page_= []
-
+            # Add spacing for source line images
             for l in word_l:
-
-                pad_ = np.ones([IMG_HEIGHT,max(line_wids) - l.shape[1]])
+                pad_ = np.ones([IMG_HEIGHT, max(line_wids) - l.shape[1]])
 
                 page_.append(np.concatenate([l, pad_], 1))
                 page_.append(gap_h)
 
-
-
             page2 = np.concatenate(page_, 0)
 
-            merge_w_size =  max(page1.shape[0], page2.shape[0])
+            merge_w_size = max(page1.shape[0], page2.shape[0])
 
             if page1.shape[0] != merge_w_size:
-
-                page1 = np.concatenate([page1, np.ones([merge_w_size-page1.shape[0], page1.shape[1]])], 0)
+                page1 = np.concatenate([page1, np.ones([merge_w_size - page1.shape[0], page1.shape[1]])], 0)
 
             if page2.shape[0] != merge_w_size:
+                page2 = np.concatenate([page2, np.ones([merge_w_size - page2.shape[0], page2.shape[1]])], 0)
 
-                page2 = np.concatenate([page2, np.ones([merge_w_size-page2.shape[0], page2.shape[1]])], 0)
+            # page1 - synthetic sample, HxW
+            # page2 - padded original sample, HxW
+            page1s.append(page1)  # 8x42, 8x108
+            page2s.append(page2)  #
 
+            # page = np.concatenate([page2, page1], 1)
 
-            page1s.append(page1)
-            page2s.append(page2)
-
-
-            #page = np.concatenate([page2, page1], 1)
-
-        page1s_ = np.concatenate(page1s,0)
+        page1s_ = np.concatenate(page1s, 0)
         max_wid = max([i.shape[1] for i in page2s])
         padded_page2s = []
 
         for para in page2s:
-            padded_page2s.append(np.concatenate([para, np.ones([ para.shape[0], max_wid-para.shape[1]])], 1))
+            padded_page2s.append(np.concatenate([para, np.ones([para.shape[0], max_wid - para.shape[1]])], 1))
 
-        padded_page2s_ =  np.concatenate(padded_page2s,0)
-
-
-
+        padded_page2s_ = np.concatenate(padded_page2s, 0)
 
         return np.concatenate([padded_page2s_, page1s_], 1)
-
-
-
-
 
     def get_current_losses(self):
 
@@ -610,13 +694,14 @@ class TRGAN(nn.Module):
 
         self.real = self.input['img'].to(DEVICE)
         self.label = self.input['label']
-        self.sdata = self.input['simg'].to(DEVICE)
-        self.ST_LEN = self.input['swids']
+        self.sdata = self.input['imgs_padded'].to(DEVICE)
+        self.ST_LEN = self.input['img_wids']
         self.text_encode, self.len_text = self.netconverter.encode(self.label)
         self.one_hot_real = make_one_hot(self.text_encode, self.len_text, VOCAB_SIZE).to(DEVICE).detach()
         self.text_encode = self.text_encode.to(DEVICE).detach()
         self.len_text = self.len_text.detach()
 
+        # Choose indices of random words to be generated
         self.words = [word.encode('utf-8') for word in np.random.choice(self.lex, batch_size)]
         self.text_encode_fake, self.len_text_fake = self.netconverter.encode(self.words)
         self.text_encode_fake = self.text_encode_fake.to(DEVICE)

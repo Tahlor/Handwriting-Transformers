@@ -143,7 +143,7 @@ class OCRLabelConverter(object):
 
         Returns:
             torch.IntTensor [length_0 + length_1 + ... length_{n - 1}]: encoded texts.
-            torch.IntTensor [n]: length of each text.
+            torch.IntTensor [n]: target_length of each text.
         """
         '''
         if isinstance(text, str):
@@ -151,12 +151,12 @@ class OCRLabelConverter(object):
                 self.dict[char.lower() if self._ignore_case else char]
                 for char in text
             ]
-            length = [len(text)]
+            target_length = [len(text)]
         elif isinstance(text, collections.Iterable):
-            length = [len(s) for s in text]
+            target_length = [len(s) for s in text]
             text = ''.join(text)
             text, _ = self.encode(text)
-        return (torch.IntTensor(text), torch.IntTensor(length))
+        return (torch.IntTensor(text), torch.IntTensor(target_length))
         '''
         length = []
         result = []
@@ -175,17 +175,17 @@ class OCRLabelConverter(object):
 
         Args:
             torch.IntTensor [length_0 + length_1 + ... length_{n - 1}]: encoded texts.
-            torch.IntTensor [n]: length of each text.
+            torch.IntTensor [n]: target_length of each text.
 
         Raises:
-            AssertionError: when the texts and its length does not match.
+            AssertionError: when the texts and its target_length does not match.
 
         Returns:
             text (str or list of str): texts to convert.
         """
         if length.numel() == 1:
             length = length[0]
-            assert t.numel() == length, "text with length: {} does not match declared length: {}".format(t.numel(),
+            assert t.numel() == length, "text with target_length: {} does not match declared target_length: {}".format(t.numel(),
                                                                                                          length)
             if raw:
                 return ''.join([self.alphabet[i - 1] for i in t])
@@ -197,7 +197,7 @@ class OCRLabelConverter(object):
                 return ''.join(char_list)
         else:
             # batch mode
-            assert t.numel() == length.sum(), "texts with length: {} does not match declared length: {}".format(
+            assert t.numel() == length.sum(), "texts with target_length: {} does not match declared target_length: {}".format(
                 t.numel(), length.sum())
             texts = []
             index = 0
@@ -236,7 +236,7 @@ class strLabelConverter(object):
             text (str or list of str): texts to convert.
         Returns:
             torch.IntTensor [length_0 + length_1 + ... length_{n - 1}]: encoded texts.
-            torch.IntTensor [n]: length of each text.
+            torch.IntTensor [n]: target_length of each text.
         """
         '''
         if isinstance(text, str):
@@ -244,12 +244,12 @@ class strLabelConverter(object):
                 self.dict[char.lower() if self._ignore_case else char]
                 for char in text
             ]
-            length = [len(text)]
+            target_length = [len(text)]
         elif isinstance(text, collections.Iterable):
-            length = [len(s) for s in text]
+            target_length = [len(s) for s in text]
             text = ''.join(text)
             text, _ = self.encode(text)
-        return (torch.IntTensor(text), torch.IntTensor(length))
+        return (torch.IntTensor(text), torch.IntTensor(target_length))
         '''
         length = []
         result = []
@@ -269,15 +269,15 @@ class strLabelConverter(object):
         """Decode encoded texts back into strs.
         Args:
             torch.IntTensor [length_0 + length_1 + ... length_{n - 1}]: encoded texts.
-            torch.IntTensor [n]: length of each text.
+            torch.IntTensor [n]: target_length of each text.
         Raises:
-            AssertionError: when the texts and its length does not match.
+            AssertionError: when the texts and its target_length does not match.
         Returns:
             text (str or list of str): texts to convert.
         """
         if length.numel() == 1:
             length = length[0]
-            assert t.numel() == length, "text with length: {} does not match declared length: {}".format(t.numel(),
+            assert t.numel() == length, "text with target_length: {} does not match declared target_length: {}".format(t.numel(),
                                                                                                          length)
             if raw:
                 return ''.join([self.alphabet[i - 1] for i in t])
@@ -289,7 +289,7 @@ class strLabelConverter(object):
                 return ''.join(char_list)
         else:
             # batch mode
-            assert t.numel() == length.sum(), "texts with length: {} does not match declared length: {}".format(
+            assert t.numel() == length.sum(), "texts with target_length: {} does not match declared target_length: {}".format(
                 t.numel(), length.sum())
             texts = []
             index = 0

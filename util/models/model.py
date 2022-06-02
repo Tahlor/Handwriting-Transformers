@@ -577,7 +577,7 @@ class TRGAN(nn.Module):
 
         for idx, st in enumerate((sdata_)):
 
-            word_t.append((st[0,0,:,:int(self.input['swids'].cpu().numpy()[0][idx])
+            word_t.append((st[0,0,:,:int(self.input['img_wids'].cpu().numpy()[0][idx])
 ].cpu().numpy()+1)/2)
 
             word_t.append(gap)
@@ -733,8 +733,8 @@ class TRGAN(nn.Module):
 
         self.real = self.input['img'].to(DEVICE)
         self.label = self.input['label']
-        self.sdata = self.input['simg'].to(DEVICE)
-        self.ST_LEN = self.input['swids']
+        self.sdata = self.input['imgs_padded'].to(DEVICE)
+        self.ST_LEN = self.input['img_wids']
         self.text_encode, self.len_text = self.netconverter.encode(self.label)
         self.one_hot_real = make_one_hot(self.text_encode, self.len_text, VOCAB_SIZE).to(DEVICE).detach()
         self.text_encode = self.text_encode.to(DEVICE).detach()
@@ -779,7 +779,7 @@ class TRGAN(nn.Module):
         def _norm_scores(arr):
             return (arr - min(arr))/(max(arr) - min(arr))
 
-        simgs = self.sdata[0].detach().cpu().numpy()
+        imgs_paddeds = self.sdata[0].detach().cpu().numpy()
         fake = self.fake[0,0].detach().cpu().numpy()
         slen = self.ST_LEN[0].detach().cpu().numpy()
         selfatt = self.netG.enc_attn_weights[0].detach().cpu().numpy()
@@ -793,7 +793,7 @@ class TRGAN(nn.Module):
         FAKEdict = {}
         count = 0
 
-        for sim_, sle_ in zip(simgs,slen):
+        for sim_, sle_ in zip(imgs_paddeds,slen):
 
             for pi in range(sim_.shape[1]//sim_.shape[0]):
 

@@ -87,8 +87,8 @@ def main():
         end_time = time.time()
         data_val = next(iter(datasetval))
         losses = model.get_current_losses()
-        page = model._generate_page(model.sdata, model.input['swids'])
-        page_val = model._generate_page(data_val['simg'].to(DEVICE), data_val['swids'])
+        page = model._generate_page(model.sdata, model.input['img_wids'])
+        page_val = model._generate_page(data_val['imgs_padded'].to(DEVICE), data_val['img_wids'])
 
         
         wandb.log({'loss-G': losses['G'],

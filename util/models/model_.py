@@ -558,7 +558,7 @@ class TRGAN(nn.Module):
 
         for idx, st in enumerate((sdata_)):
 
-            word_t.append((st[0,0,:,:int(self.input['swids'].cpu().numpy()[0][idx])
+            word_t.append((st[0,0,:,:int(self.input['img_wids'].cpu().numpy()[0][idx])
 ].cpu().numpy()+1)/2)
 
             word_t.append(gap)
@@ -714,8 +714,8 @@ class TRGAN(nn.Module):
 
         self.real = self.input['img'].to(DEVICE)
         self.label = self.input['label']
-        self.sdata = self.input['simg'].to(DEVICE)
-        self.ST_LEN = self.input['swids']
+        self.sdata = self.input['imgs_padded'].to(DEVICE)
+        self.ST_LEN = self.input['img_wids']
         self.text_encode, self.len_text = self.netconverter.encode(self.label)
         self.one_hot_real = make_one_hot(self.text_encode, self.len_text, VOCAB_SIZE).to(DEVICE).detach()
         self.text_encode = self.text_encode.to(DEVICE).detach()

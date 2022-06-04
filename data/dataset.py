@@ -135,7 +135,7 @@ def collate_fn_text(data):
                 #"text_raw": text_raw,
                 "text_encoded": 0, # batch x max_sentence x max_word_length
                }
-    padding2d = set(["text_encoded"])
+    padding2d = set(["text_encoded", ]) # "text_encoded_l"
     for data_key in keys:
         batch_data = [b[data_key] for b in data]
 
@@ -145,7 +145,7 @@ def collate_fn_text(data):
                 dims = [len(batch_data)]
                 for i in range(len(batch_data[0].shape)):
                     dims.append(max([x.shape[i] for x in batch_data]))
-                _batch_data = torch.zeros(*dims) + padding[data_key]
+                _batch_data = torch.zeros(*dims, dtype=torch.int64) + padding[data_key]
                 for i,d in enumerate(batch_data):
                     slices = [i] + [slice(0,x) for x in d.shape]
                     _batch_data[slices] = d
@@ -161,8 +161,7 @@ def collate_fn_text(data):
                 #     #batch_data[i] = torch.nn.functional.pad(batch_data[i], pad=[0,last_dim_pad,0,penultimate_dim_pad], value=padding[data_key])
             else:
                 batch_data = torch.nn.utils.rnn.pad_sequence(batch_data, batch_first=True, padding_value=padding[data_key])
-        else:
-            output_dict[data_key] = batch_data
+        output_dict[data_key] = batch_data
     return output_dict
 
 

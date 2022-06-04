@@ -1,0 +1,46 @@
+2022-06-03 11:27:09,178 INFO    MainThread:26617 [internal.py:wandb_internal():90] W&B internal server running at pid: 26617, started at: 2022-06-03 11:27:09.177494
+2022-06-03 11:27:09,181 INFO    WriterThread:26617 [datastore.py:open_for_write():75] open: /home/taylor/github/Handwriting-Transformers/wandb/run-20220603_112707-10qj4qvx/run-10qj4qvx.wandb
+2022-06-03 11:27:09,186 DEBUG   SenderThread:26617 [sender.py:send():232] send: header
+2022-06-03 11:27:09,186 DEBUG   SenderThread:26617 [sender.py:send():232] send: run
+2022-06-03 11:27:09,358 DEBUG   HandlerThread:26617 [handler.py:handle_request():141] handle_request: check_version
+2022-06-03 11:27:09,367 INFO    SenderThread:26617 [dir_watcher.py:__init__():166] watching files in: /home/taylor/github/Handwriting-Transformers/wandb/run-20220603_112707-10qj4qvx/files
+2022-06-03 11:27:09,367 INFO    SenderThread:26617 [sender.py:_start_run_threads():811] run started: 10qj4qvx with start time 1654277227
+2022-06-03 11:27:09,367 DEBUG   SenderThread:26617 [sender.py:send():232] send: summary
+2022-06-03 11:27:09,368 INFO    SenderThread:26617 [sender.py:_save_file():946] saving file wandb-summary.json with policy end
+2022-06-03 11:27:09,368 DEBUG   SenderThread:26617 [sender.py:send_request():246] send_request: check_version
+2022-06-03 11:27:09,487 DEBUG   HandlerThread:26617 [handler.py:handle_request():141] handle_request: run_start
+2022-06-03 11:27:09,491 DEBUG   HandlerThread:26617 [meta.py:__init__():35] meta init
+2022-06-03 11:27:09,491 DEBUG   HandlerThread:26617 [meta.py:__init__():49] meta init done
+2022-06-03 11:27:09,491 DEBUG   HandlerThread:26617 [meta.py:probe():209] probe
+2022-06-03 11:27:09,498 DEBUG   HandlerThread:26617 [meta.py:_setup_git():199] setup git
+2022-06-03 11:27:09,518 DEBUG   HandlerThread:26617 [meta.py:_setup_git():206] setup git done
+2022-06-03 11:27:09,519 DEBUG   HandlerThread:26617 [meta.py:_save_code():87] save code
+2022-06-03 11:27:09,528 DEBUG   HandlerThread:26617 [meta.py:_save_code():108] save code done
+2022-06-03 11:27:09,528 DEBUG   HandlerThread:26617 [meta.py:_save_patches():125] save patches
+2022-06-03 11:27:09,604 DEBUG   HandlerThread:26617 [meta.py:_save_patches():167] save patches done
+2022-06-03 11:27:09,604 DEBUG   HandlerThread:26617 [meta.py:_save_pip():53] save pip
+2022-06-03 11:27:09,607 DEBUG   HandlerThread:26617 [meta.py:_save_pip():67] save pip done
+2022-06-03 11:27:09,607 DEBUG   HandlerThread:26617 [meta.py:_save_conda():74] save conda
+2022-06-03 11:27:10,380 INFO    Thread-12 :26617 [dir_watcher.py:_on_file_created():213] file/dir created: /home/taylor/github/Handwriting-Transformers/wandb/run-20220603_112707-10qj4qvx/files/wandb-summary.json
+2022-06-03 11:27:10,381 INFO    Thread-12 :26617 [dir_watcher.py:_on_file_created():213] file/dir created: /home/taylor/github/Handwriting-Transformers/wandb/run-20220603_112707-10qj4qvx/files/diff.patch
+2022-06-03 11:27:10,382 INFO    Thread-12 :26617 [dir_watcher.py:_on_file_created():213] file/dir created: /home/taylor/github/Handwriting-Transformers/wandb/run-20220603_112707-10qj4qvx/files/requirements.txt
+2022-06-03 11:27:10,382 INFO    Thread-12 :26617 [dir_watcher.py:_on_file_created():213] file/dir created: /home/taylor/github/Handwriting-Transformers/wandb/run-20220603_112707-10qj4qvx/files/code/train.py
+2022-06-03 11:27:10,383 INFO    Thread-12 :26617 [dir_watcher.py:_on_file_created():213] file/dir created: /home/taylor/github/Handwriting-Transformers/wandb/run-20220603_112707-10qj4qvx/files/conda-environment.yaml
+2022-06-03 11:27:10,384 INFO    Thread-12 :26617 [dir_watcher.py:_on_file_created():213] file/dir created: /home/taylor/github/Handwriting-Transformers/wandb/run-20220603_112707-10qj4qvx/files/code
+2022-06-03 11:27:12,104 DEBUG   HandlerThread:26617 [meta.py:_save_conda():84] save conda done
+2022-06-03 11:27:12,104 DEBUG   HandlerThread:26617 [meta.py:probe():247] probe done
+2022-06-03 11:27:12,118 DEBUG   SenderThread:26617 [sender.py:send():232] send: files
+2022-06-03 11:27:12,119 INFO    SenderThread:26617 [sender.py:_save_file():946] saving file wandb-metadata.json with policy now
+2022-06-03 11:27:12,119 INFO    SenderThread:26617 [sender.py:_save_file():946] saving file code/train.py with policy now
+2022-06-03 11:27:12,120 INFO    SenderThread:26617 [sender.py:_save_file():946] saving file diff.patch with policy now
+2022-06-03 11:27:12,133 DEBUG   HandlerThread:26617 [handler.py:handle_request():141] handle_request: stop_status
+2022-06-03 11:27:12,144 DEBUG   SenderThread:26617 [sender.py:send_request():246] send_request: stop_status
+2022-06-03 11:27:12,271 DEBUG   SenderThread:26617 [sender.py:send():232] send: telemetry
+2022-06-03 11:27:12,379 INFO    Thread-12 :26617 [dir_watcher.py:_on_file_modified():226] file/dir modified: /home/taylor/github/Handwriting-Transformers/wandb/run-20220603_112707-10qj4qvx/files/conda-environment.yaml
+2022-06-03 11:27:12,379 INFO    Thread-12 :26617 [dir_watcher.py:_on_file_created():213] file/dir created: /home/taylor/github/Handwriting-Transformers/wandb/run-20220603_112707-10qj4qvx/files/output.log
+2022-06-03 11:27:12,383 INFO    Thread-12 :26617 [dir_watcher.py:_on_file_created():213] file/dir created: /home/taylor/github/Handwriting-Transformers/wandb/run-20220603_112707-10qj4qvx/files/wandb-metadata.json
+2022-06-03 11:27:12,653 INFO    Thread-16 :26617 [upload_job.py:push():137] Uploaded file /tmp/tmpjrdkpzblwandb/1rjkjuob-wandb-metadata.json
+2022-06-03 11:27:12,654 INFO    Thread-18 :26617 [upload_job.py:push():137] Uploaded file /tmp/tmpjrdkpzblwandb/15diy5ve-diff.patch
+2022-06-03 11:27:12,657 INFO    Thread-17 :26617 [upload_job.py:push():137] Uploaded file /tmp/tmpjrdkpzblwandb/1z751ur7-code/train.py
+2022-06-03 11:27:18,222 WARNING MainThread:26617 [internal.py:wandb_internal():153] Internal process interrupt: 1
+2022-06-03 11:27:18,225 DEBUG   SenderThread:26617 [sender.py:send():232] send: telemetry

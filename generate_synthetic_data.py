@@ -13,7 +13,9 @@ import pickle
 from PIL import Image
 import tqdm
 import shutil
+import sys
 from datasets import load_dataset
+from util import render
 
 MODEL = "IAM"
 STYLE = "IAM"
@@ -73,26 +75,30 @@ class Generator():
         if isinstance(text_list,str):
             text_encode = [j.encode() for j in text_list.split(' ')]
             eval_text_encode, eval_len_text = self.model.netconverter.encode(text_encode)
-            eval_text_encode = eval_text_encode.to('cuda:0').repeat(batch_size, 1, 1)
+            eval_text_encode = eval_text_encode.repeat(batch_size, 1, 1)
 
         else:
             for text in text_list:
                 text_encode =  [j.encode() for j in text.split(' ')]
                 eval_text_encode, eval_len_text = self.model.netconverter.encode(text_encode)
 
-            eval_text_encode = eval_text_encode.to('cuda:0').repeat(batch_size, 1, 1)
+            eval_text_encode = eval_text_encode.repeat(batch_size, 1, 1)
         return eval_text_encode, eval_len_text
 
     def generate_new_sample(self, text):
         print ('(3) Loading text content...')
-        eval_text_encode, eval_len_text = self.encode_text(text)
+        eval_text_encode_old, eval_len_text_old = self.encode_text(text)
 
         if os.path.isdir(self.output_path): shutil.rmtree(self.output_path)
         os.makedirs(self.output_path, exist_ok = True)
         master_list = []
         # Each is 1 page
-        for i,style in enumerate(tqdm.tqdm(self.style_data)):
-            text = next(iter(self.text_loader))
+
+        for d in self.text_loader:
+            eval_text_encode = d["text_encoded"].to('cuda:0')
+            eval_len_text = d["text_encoded_l"] # [d.to('cuda:0') for d in d["text_encoded_l"]]
+            #for i,style in enumerate(tqdm.tqdm(self.style_data)):
+            style = next(iter(self.style_data))
             master_list += self.model.generate_word_list(
                 style_images=style['imgs_padded'].to(DEVICE),
                 style_lengths=style['img_wids'],
@@ -102,8 +108,11 @@ class Generator():
                 eval_len_text=eval_len_text,
                 source=f"{MODEL}_{STYLE}"
             )
-
-            #cv2.imwrite(self.output_path+'/image' + str(i) + '.png', page_val*255)
+            break
+            # style_references", words, author_id, source (dataset)
+        for i, item in enumerate(master_list):
+            page = render.get_page_from_words(item["words"])
+            cv2.imwrite(self.output_path+'/image' + str(i) + '.png', page)
 
         print ('\nOutput images saved in : ' + self.output_path)
 

@@ -413,9 +413,11 @@ class TRGAN(nn.Module):
         if eval_len_text == None:
             eval_len_text = self.eval_len_text
 
+        #print(style_images.shape, eval_text_encode.shape)
         self.fakes = self.netG.Eval(style_images, eval_text_encode) # 52 x [8,1,32,160] ; [Batch, Channel, Line_Height, Line_Width]
         output = []
         # fake_[batch_idx
+        batch_size = eval_text_encode.shape[0]
         for batch_author_idx in range(batch_size):
             # Different length stuff
             _eval_len_text=eval_len_text if torch.is_tensor(eval_len_text) else eval_len_text[batch_author_idx]

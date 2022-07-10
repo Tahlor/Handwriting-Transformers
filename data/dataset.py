@@ -150,169 +150,27 @@ def collate_fn_text(data):
                     slices = [i] + [slice(0,x) for x in d.shape]
                     _batch_data[slices] = d
                 batch_data = _batch_data
-                # last_dim_max = max([x.shape[-1] for x in batch_data])
-                # penultimate_dim_max = max([x.shape[-2] for x in batch_data])
-                # batch
-                # output = torch.zeros()
-                # for i,item in batch_data:
-                #     last_dim_pad = last_dim_max - item.shape[-1]
-                #     penultimate_dim_pad = penultimate_dim_max - item.shape[-1]
-                #
-                #     #batch_data[i] = torch.nn.functional.pad(batch_data[i], pad=[0,last_dim_pad,0,penultimate_dim_pad], value=padding[data_key])
             else:
                 batch_data = torch.nn.utils.rnn.pad_sequence(batch_data, batch_first=True, padding_value=padding[data_key])
         output_dict[data_key] = batch_data
     return output_dict
 
 
-class Wikipedia():
-    def __init__(self,
-                 dataset,
-                 vocabulary,
-                 encode_function,
-                 min_sentence_length=32,
-                 max_sentence_length=64,
-                 ):
-        self.dataset = dataset
-        self.vocabulary = vocabulary
-        self.filter_sentence = filter_vocab(vocabulary)
-        self.min_sentence_length = min_sentence_length
-        self.max_sentence_length = max_sentence_length
-        self.encode_function = encode_function
-        self.collate_fn = collate_fn_text
-
-    def encode(self, text):
-        text_encode = [j.encode() for j in text.split(' ')]
-        eval_text_encode, eval_len_text = self.encode_function(text_encode)
-        return eval_text_encode, eval_len_text
-
-    @staticmethod
-    def chunk_letters(filtered_sentence, length):
-        """ Search rightward for next space at beginning/end of line
-
-        Args:
-            filtered_sentence:
-            length:
-
-        Returns:
-
-        """
-        try:
-            start = random.randint(0, len(filtered_sentence) - length)
-            new_start = filtered_sentence[start:].find(" ")+start+1
-            fs = filtered_sentence[new_start:new_start+length]
-            new_end = fs.rfind(" ")
-            fs = fs[:new_end]
-        except Exception as e:
-            fs = filtered_sentence[:length]
-            new_end = fs.rfind(" ") if fs.rfind(" ") > 0 else None
-            fs = fs[:new_end].strip()
-        return fs
-
-    @staticmethod
-    def chunk_words(filtered_sentence, length, force_new_sentence=1, force_end_sentence=1):
-        """ Search rightward for next sentence and end of sentence.
-        Args:
-            filtered_sentence:
-            length:
-            force_new_sentence [0,1] probability: 1 - force text to begin at the beginning of a sentence
-            force_end_sentence [0,1] probability: 1 - force text to end at end of sentence
-        Returns:
-
-        It's possible it returns a blank.
-        """
-        def find_next_period(sentence, index):
-            # Incorrect attempt to search within selection for sentence end
-            #end = -next(i for i,word in enumerate(filtered_sentence[end:start:-1]) if word[-1] == ".") + end
-
-            try: # Search rightward for next period
-                index += next(i for i, word in enumerate(sentence[index:]) if word and word[-1] == ".") + 1
-            except StopIteration: # None found
-                index = None
-            return index
-
-        force_new_sentence = random.random() < force_new_sentence # 1 means force
-        force_end_sentence = random.random() < force_end_sentence # 1 means force
-
-        _filtered_sentence = filtered_sentence.split(" ")
-        start = random.randint(0, max(0,len(_filtered_sentence) - length))
-        if force_new_sentence:
-            start = find_next_period(filtered_sentence, start)
-        end = start + length if start else length
-        if force_end_sentence:
-            end = find_next_period(_filtered_sentence, end)
-
-        new_sentence = " ".join(_filtered_sentence[start:end]).strip()
-        return new_sentence
-
-
-    def _get_text(self, sentence, key="text", target_length=None, unit="words"):
-        """ Target length is usually a minimum length if we need to force it to end at a sentence end.
-            However, the returned sentence can be shorter than the target length, if the initial start point is
-                at the end of a document and we force to start at sentence beginning.
-                    [Instead of looking forward to start sentence, we could look backward, then target_length would be minimum length.]
-                    [We could reject articles that are too short]
-        Args:
-            sentence:
-            key:
-            target_length:
-            unit:
-
-        Returns:
-
-        """
-        if target_length is None:
-            target_length = self.max_sentence_length
-
-        text = sentence[key]
-
-        # Remove section headings
-        filtered_sentence = replace_symbols(filter_lines_to_sentences(text))
-
-        # Remove OOV symbols
-        filtered_sentence = " " + self.filter_sentence(filtered_sentence) + " "
-        if unit == "characters":
-            fs = self.chunk_letters(filtered_sentence, target_length)
-        elif unit == "words":
-            fs = self.chunk_words(filtered_sentence, target_length)
-        return fs
-
-    def __len__(self):
-        return len(self.dataset)
-
-    def get_text(self, idx, unit="words"):
-        """ Choose random length sentence satisfying (min,max). After processing, make sure it is still long enough.
-
-        Args:
-            idx:
-            unit:
-
-        Returns:
-
-        """
-        length = random.randint(self.min_sentence_length, self.max_sentence_length)
-        while True:
-            sentence = self._get_text(self.dataset[idx], target_length=length)
-            s = sentence if unit == "characters" else sentence.split()
-            s = s[:self.max_sentence_length]
-            if len(s) >= self.min_sentence_length: # make sure article is long enough
-                break
-            else:
-                idx = random.randint(0,len(self)) # try a new random article
-        return s if unit == "characters" else " ".join(s)
-
-    def __getitem__(self, index):
-        text_raw = self.get_text(index)
-        text_encode, text_encode_l = self.encode(text_raw)
-        return {
-            "text_raw": text_raw,
-            "text_encoded": text_encode,
-            "text_encoded_l": text_encode_l,
-        }
 
 class TextDatasetval():
+    """ preset_author: ALL items will be for a specific author, must be set to None to iterate through dataset
 
-    def __init__(self, base_path = DATASET_PATHS, num_examples = 15, target_transform=None):
+        WARNING: DO NOT CHANGE preset_author after Dataloader is created
+                 Keep shuffle on--code assumes shuffle is on here OR in Dataloader, otherwise next(iter()) won't work on Dataloader
+
+
+    """
+    def __init__(self, base_path = DATASET_PATHS,
+                 num_examples = 15,
+                 target_transform=None,
+                 shuffle=True,
+                 preset_author=None
+                 ):
         
         self.NUM_EXAMPLES = num_examples
         #base_path = DATASET_PATHS
@@ -327,12 +185,28 @@ class TextDatasetval():
         self.target_transform = target_transform
         
         self.collate_fn = TextCollator()
-    
+        self.preset_author = preset_author
+        self.shuffle = shuffle
 
     def __len__(self):
         return len(self.author_id)
 
-    def __getitem__(self, index):
+    def random_author(self):
+        return random.randint(0,len(self.author_id))
+
+    def get(self, index=None):
+        """
+
+        Args:
+            index: Author index
+
+        Returns:
+
+        """
+        if not self.preset_author is None:
+            index = self.preset_author
+        elif index is None or self.shuffle: # always do a random author if shuffle is on
+            index = self.random_author()
 
         NUM_SAMPLES = self.NUM_EXAMPLES
 
@@ -380,6 +254,42 @@ class TextDatasetval():
         }
 
         return item
+
+    def __getitem__(self, item):
+        return self.get(item)
+
+    def get_one_author(self, n, author_id=None, same_images=False):
+        """ Collate/tile a single item
+
+        Args:
+            item:
+            n:
+            same_images (bool): if True, just use the same style images; otherwise, use different images from same author
+
+        Returns:
+
+        """
+        if author_id is None:
+            author_id = self.random_author()
+        if same_images:
+            return self.collate_fn([self.get(author_id)]*n)
+        else:
+            return self.collate_fn([self.get(author_id) for i in range(n)])
+
+    def truncate(self, batch, n):
+        """ Make batch smaller
+
+        Args:
+            batch:
+            n:
+
+        Returns:
+
+        """
+        for key,item in batch.items():
+            batch[key] = item[:n]
+        return batch
+
 
 class WikiCollator(object):
     def __init__(self):

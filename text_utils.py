@@ -31,12 +31,16 @@ def filter_with_punctuation():
                                             double_space.sub(" ",
                                             lower_case.sub("", sentence)).strip())
 
-def filter_vocab(vocab):
+def filter_vocab(vocab=None):
     if vocab is None:
         return lambda x: x
     else:
-        vocab = set(vocab)
-        return lambda string: "".join([v for v in string if v in vocab])
+        #vocab = set(vocab)
+        #return lambda string: "".join([v for v in string if v in vocab])
+        vocab = re.escape(str(vocab))
+        vocab_regex = re.compile(fr"""[^{vocab}]*""")
+        return lambda x: vocab_regex.sub("", x)
+
 
 """
 Excluded:

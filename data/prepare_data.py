@@ -249,7 +249,7 @@ def createDataset(IMG_DATA, image_path_list, label_list, outputPath, mode, autho
             if resize=='charResize':
                 if (width/len_word > (charmaxW-1)) or (width/len_word < charminW) :
                     if discard_wide and width/len_word > 3*((charmaxW-1)):
-                        print('%s has a width larger than max image width' % imagePath)
+                        print('%s has a width larger than vocab_size image width' % imagePath)
                         continue
                     if discard_narr and (width / len_word) < (charminW/3):
                         print('%s has a width smaller than min image width' % imagePath)
@@ -292,7 +292,7 @@ def createDataset(IMG_DATA, image_path_list, label_list, outputPath, mode, autho
     cache['num-samples'] = str(nSamples)
     writeCache(env, cache)
     env.close()
-    print('Created dataset with %d samples' % nSamples)
+    print('Created next_text_dataset with %d samples' % nSamples)
 
 
 
@@ -401,7 +401,7 @@ if __name__ == '__main__':
             dict_['test'][author_id] =  [{'path':file_path, 'label':string}]
 
 
-    create_Dict = True # create a dictionary of the generated dataset
+    create_Dict = True # create a dictionary of the generated next_text_dataset
     dataset = 'IAM'     #CVL/IAM/RIMES/gw
     mode = 'all'        # tr/te/val/va1/va2/all
     labeled = True
@@ -442,7 +442,7 @@ if __name__ == '__main__':
     
     
         #if create_Dict:
-        #    createDict(label_list, top_dir, dataset, mode, words, remove_punc)
+        #    createDict(label_list, top_dir, next_text_dataset, mode, words, remove_punc)
         #printAlphabet(label_list)
     import pickle
 

@@ -5,7 +5,7 @@ from PIL import Image
 processor = TrOCRProcessor.from_pretrained("microsoft/trocr-base-handwritten")
 model = VisionEncoderDecoderModel.from_pretrained("microsoft/trocr-base-handwritten")
 
-# load image from the IAM dataset
+# load image from the IAM next_text_dataset
 url = "https://fki.tic.heia-fr.ch/static/img/a01-122-02.jpg"
 image = Image.open(requests.get(url, stream=True).raw).convert("RGB")
 

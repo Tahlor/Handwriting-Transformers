@@ -32,7 +32,7 @@ class Generator():
         #self.model_path = 'files/iam_model.pth'; self.images_path = 'files/CVL-32.pickle' #(iam-cvl-cross)
         #self.model_path = 'files/cvl_model.pth'; self.images_path = 'files/IAM-32.pickle' #(cvl-iam-cross)#
 
-        print ('(1) Loading dataset files...')
+        print ('(1) Loading next_text_dataset files...')
 
         self.TextDatasetObjval = TextDatasetval(base_path = self.images_path, num_examples = 15)
         self.style_data = torch.utils.data.DataLoader(
@@ -49,7 +49,7 @@ class Generator():
         self.model.netG.load_state_dict(torch.load(self.model_path))
         print (self.model_path+' : Model loaded Successfully')
 
-        # Load novel text dataset
+        # Load novel text next_text_dataset
         self.text_data = Wikipedia(
             dataset=load_dataset("wikipedia", "20220301.en")["train"],
             vocabulary=set(ALPHABET), # set(self.model.netconverter.dict.keys())
@@ -57,6 +57,7 @@ class Generator():
             min_sentence_length=32,
             max_sentence_length=64
         )
+
         self.text_loader=torch.utils.data.DataLoader(
                     self.text_data,
                     batch_size=batch_size,
@@ -97,7 +98,7 @@ class Generator():
         for d in self.text_loader:
             eval_text_encode = d["text_encoded"].to('cuda:0')
             eval_len_text = d["text_encoded_l"] # [d.to('cuda:0') for d in d["text_encoded_l"]]
-            #for i,style in enumerate(tqdm.tqdm(self.style_data)):
+            #for i,style in enumerate(tqdm.tqdm(self.style_loader)):
             style = next(iter(self.style_data))
             master_list += self.model.generate_word_list(
                 style_images=style['imgs_padded'].to(DEVICE),
@@ -109,7 +110,7 @@ class Generator():
                 source=f"{MODEL}_{STYLE}"
             )
             break
-            # style_references", words, author_id, source (dataset)
+            # style_references", words, author_id, source (next_text_dataset)
         for i, item in enumerate(master_list):
             page = render.get_page_from_words(item["words"])
             cv2.imwrite(self.output_path+'/image' + str(i) + '.png', page)

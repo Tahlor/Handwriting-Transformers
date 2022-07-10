@@ -10,7 +10,7 @@ def get_page_from_words(word_lists,
 
     - mcmc - choose offset from previous line
            - sum offsets
-           - find max/min
+           - find vocab_size/min
            - this is the line thickness
     Args:
         word_lists:
@@ -70,7 +70,7 @@ def get_page_from_words(word_lists,
     if len(page_lines) == 0:
         page_lines.append(np.concatenate(current_line, 1))
 
-    # max_line_width = max([i.shape[1] for i in line_all])
+    # max_line_width = vocab_size([i.shape[1] for i in line_all])
     vertical_line_space = np.ones([vertical_space, max_line_width])
     page_ = []
 

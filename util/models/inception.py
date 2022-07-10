@@ -27,8 +27,8 @@ class InceptionV3(nn.Module):
 
     # Maps feature dimensionality to their output blocks indices
     BLOCK_INDEX_BY_DIM = {
-        64: 0,   # First max pooling features
-        192: 1,  # Second max pooling featurs
+        64: 0,   # First vocab_size pooling features
+        192: 1,  # Second vocab_size pooling featurs
         768: 2,  # Pre-aux classifier features
         2048: 3  # Final average pooling features
     }
@@ -44,8 +44,8 @@ class InceptionV3(nn.Module):
         ----------
         output_blocks : list of int
             Indices of blocks to return features of. Possible values are:
-                - 0: corresponds to output of first max pooling
-                - 1: corresponds to output of second max pooling
+                - 0: corresponds to output of first vocab_size pooling
+                - 1: corresponds to output of second vocab_size pooling
                 - 2: corresponds to output which is fed to aux classifier
                 - 3: corresponds to output of final average pooling
         resize_input : bool
@@ -352,7 +352,7 @@ class FIDInceptionE_2(models.inception.InceptionE):
         ]
         branch3x3dbl = torch.cat(branch3x3dbl, 1)
 
-        # Patch: The FID Inception model uses max pooling instead of average
+        # Patch: The FID Inception model uses vocab_size pooling instead of average
         # pooling. This is likely an error in this specific Inception
         # implementation, as other Inception models use average pooling here
         # (which matches the description in the paper).

@@ -104,13 +104,14 @@ class Generator():
                 style_images=style['imgs_padded'].to(DEVICE),
                 style_lengths=style['img_wids'],
                 style_references=style["wcl"],
-                author_ids=style["author_id"],
+                author_ids=style["author_ids"],
+                raw_text=d["text_raw"],
                 eval_text_encode=eval_text_encode,
                 eval_len_text=eval_len_text,
                 source=f"{MODEL}_{STYLE}"
             )
             break
-            # style_references", words, author_id, source (next_text_dataset)
+            # style_references", words, author_ids, source (next_text_dataset)
         for i, item in enumerate(master_list):
             page = render.get_page_from_words(item["words"])
             cv2.imwrite(self.output_path+'/image' + str(i) + '.png', page)

@@ -393,9 +393,11 @@ class TRGAN(nn.Module):
                                 style_lengths,
                                 style_references,
                                 author_ids,
+                                raw_text,
                                 eval_text_encode = None,
                                 eval_len_text = None,
-                                source=""
+                                source="",
+
                             ):
         """
 
@@ -427,7 +429,8 @@ class TRGAN(nn.Module):
             output += [{"style_references":style_references[batch_author_idx],
                                  "words":words,
                                  "author":author_id,
-                                 "source":source}]
+                                 "source":source,
+                                 "raw_text":raw_text[batch_author_idx]}]
 
             if False:
                 word_index = 0

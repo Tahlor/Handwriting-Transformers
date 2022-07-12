@@ -1,6 +1,6 @@
 import os
 import time
-
+from collections import defaultdict
 from basic_text_dataset import BasicTextDataset
 from handwriting.data.dataset import TextDataset, TextDatasetval
 from handwriting.data.wikipedia_dataset import Wikipedia
@@ -15,7 +15,7 @@ from torch import nn
 from handwriting.data.dataset import get_transform
 import pickle
 from PIL import Image
-import tqdm
+from tqdm import tqdm
 import shutil
 import sys
 from datasets import load_dataset
@@ -106,42 +106,41 @@ class Generator():
               _style = self.style_image_and_text_dataset.get_one_author(n=batch_size, author_id=style)
         return _style
 
-    def generate_new_samples(self, style=None, save_path=None):
+    def generate_new_samples(self, style=None, save_path=None, master_list=None):
         """
 
         Args:
-            style (int or dict with imgs_padded, img_wids, wcl, author_id):
+            style (int or dict with imgs_padded, img_wids, wcl, author_ids):
             save_path:
 
         Returns:
 
         """
-        master_list = []
-        for d in self.new_text_loader:
+        if master_list is None:
+            master_list = defaultdict(dict)
+        for d in tqdm(self.new_text_loader):
             eval_text_encode = d["text_encoded"].to('cuda:0')
             eval_len_text = d["text_encoded_l"] # [d.to('cuda:0') for d in d["text_encoded_l"]]
-
             _style = self.process_style(style, batch_size=eval_text_encode.shape[0])
-
-
-            master_list += self.model.generate_word_list(
+            results =  self.model.generate_word_list(
                 style_images=_style['imgs_padded'].to(DEVICE),
                 style_lengths=_style['img_wids'],
                 style_references=_style["wcl"],
-                author_ids=_style["author_id"],
+                author_ids=_style["author_ids"],
+                raw_text=d["text_raw"],
                 eval_text_encode=eval_text_encode,
                 eval_len_text=eval_len_text,
                 source=f"{MODEL}_{STYLE}"
             )
+            for result in results:
+                author_id = f"{result}_{MODEL}_{STYLE}"
+                if not author_id in master_list:
+                    master_list[author_id] = defaultdict(list)
+                master_list[author_id][result["raw_text"]].append(result['words'])
 
         if save_path:
-            np.save(master_list, allow_pickle=True)
-
-def show(img):
-    from matplotlib import pyplot as plt
-    plt.imshow(img, cmap="gray")
-    plt.show()
-
+            np.save(save_path, master_list, allow_pickle=True)
+        return master_list
 
 
 
@@ -153,6 +152,7 @@ if __name__ == '__main__':
     text_data = trivial
     from data.unigram_dataset import Unigrams
     model = get_model(models[MODEL])
+
     if False:
         basic_text_dataset = Wikipedia(
                 dataset=load_dataset("wikipedia", "20220301.en")["train"],
@@ -161,7 +161,7 @@ if __name__ == '__main__':
                 min_sentence_length=32,
                 max_sentence_length=64
             )
-    elif True:
+    elif False:
         basic_text_dataset = BasicTextDataset(["This","is","my","dataset","This","is","my"],
                                               set(ALPHABET),
                                               encode_function=model.netconverter.encode)
@@ -176,10 +176,16 @@ if __name__ == '__main__':
 
 
     g = Generator(model=model, next_text_dataset=basic_text_dataset, )
-    style = g.style_image_and_text_dataset.get_one_author(next(iter(g.style_image_and_text_dataset)), n=batch_size)
+    # Get random style
+    #style = next(iter(g.style_image_and_text_dataset))
+
+    # Get specific style
+    author_id = g.style_image_and_text_dataset.random_author()
+    style = g.style_image_and_text_dataset.get_one_author(n=batch_size, author_id=author_id)
     i = 0
+    master_list = None
     while True:
-        g.generate_new_samples(style)
+        master_list = g.generate_new_samples(style, save_path=f"./data/synth_hw/style_{author_id}_samples_{i}.npy", master_list=master_list)
         i+=1
         print(i)
 

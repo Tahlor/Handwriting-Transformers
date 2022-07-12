@@ -231,7 +231,7 @@ def createDataset(IMG_DATA, image_path_list, label_list, outputPath, mode, autho
 
     for i in tqdm(range(nSamples)):
         imagePath = image_path_list[i]
-        #author_id = image_path_list[i].split('/')[-2]
+        #author_ids = image_path_list[i].split('/')[-2]
         label = label_list[i]
         if not os.path.exists(imagePath):
             print('%s does not exist' % imagePath)

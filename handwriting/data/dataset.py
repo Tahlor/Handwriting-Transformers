@@ -105,7 +105,7 @@ class TextDataset():
             'img_path': 'img_path',
             'idx': 'indexes',
             'wcl': index,
-            'author_id': author_id
+            'author_ids': author_id
         }
 
         return item
@@ -179,7 +179,8 @@ class TextDatasetval():
         self.IMG_DATA  = dict(list( self.IMG_DATA.items()))#[NUM_WRITERS:])
         if 'None' in self.IMG_DATA.keys():
             del self.IMG_DATA['None']
-        self.author_id = list(self.IMG_DATA.keys())
+        self.author_ids = list(self.IMG_DATA.keys())
+        self.author_id_to_index = {v: k for k, v in enumerate(self.author_ids)}
 
         self.transform = get_transform(grayscale=True)
         self.target_transform = target_transform
@@ -189,12 +190,13 @@ class TextDatasetval():
         self.shuffle = shuffle
 
     def __len__(self):
-        return len(self.author_id)
+        return len(self.author_ids)
 
     def random_author(self):
-        return random.randint(0,len(self.author_id))
+        idx = random.randint(0, len(self.author_ids))
+        return self.author_ids[idx]
 
-    def get(self, index=None):
+    def get(self, author_id=None):
         """
 
         Args:
@@ -204,13 +206,14 @@ class TextDatasetval():
 
         """
         if not self.preset_author is None:
-            index = self.preset_author
-        elif index is None or self.shuffle: # always do a random author if shuffle is on
-            index = self.random_author()
+            author_id = self.preset_author
+        elif author_id is None and self.shuffle: # always do a random author if shuffle is on
+            author_id = self.random_author()
+
+        index = self.author_id_to_index[author_id]
 
         NUM_SAMPLES = self.NUM_EXAMPLES
 
-        author_id = self.author_id[index]
 
         self.IMG_DATA_AUTHOR = self.IMG_DATA[author_id]
         random_idxs = np.random.choice(len(self.IMG_DATA_AUTHOR), NUM_SAMPLES, replace = True)
@@ -250,13 +253,14 @@ class TextDatasetval():
             'img_path': 'img_path',
             'idx': 'indexes',
             'wcl': index,
-            'author_id': author_id
+            'author_ids': author_id
         }
 
         return item
 
     def __getitem__(self, item):
-        return self.get(item)
+        author_id = self.author_ids[item]
+        return self.get(author_id)
 
     def get_one_author(self, n, author_id=None, same_images=False):
         """ Collate/tile a single item
@@ -313,7 +317,7 @@ class TextCollator(object):
         indexes = [item['idx'] for item in batch]
         imgs_paddeds =  torch.stack([item['imgs_padded'] for item in batch], 0)
         wcls =  torch.Tensor([item['wcl'] for item in batch])
-        author_ids = [item['author_id'] for item in batch]
+        author_ids = [item['author_ids'] for item in batch]
         img_wids =  torch.Tensor([item['img_wids'] for item in batch])
         imgs = torch.ones([len(batch), batch[0]['img'].shape[0], batch[0]['img'].shape[1], max(width)], dtype=torch.float32)
         for idx, item in enumerate(batch):
@@ -328,7 +332,7 @@ class TextCollator(object):
             'imgs_padded': imgs_paddeds,
             'img_wids': img_wids,
             'wcl': wcls,
-            'author_id': author_ids,
+            'author_ids': author_ids,
         }
         if 'label' in batch[0].keys():
             labels = [item['label'] for item in batch]

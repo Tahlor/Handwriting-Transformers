@@ -2,4 +2,8 @@ trocr/
 files/
 results/
 wandb/
+datasets/
+
 *.npy
+*.pth
+*.pickle

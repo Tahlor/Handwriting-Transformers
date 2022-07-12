@@ -45,3 +45,8 @@ def combine_results():
 
     """
     pass
+
+def show(img):
+    from matplotlib import pyplot as plt
+    plt.imshow(img, cmap="gray")
+    plt.show()

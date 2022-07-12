@@ -15,9 +15,9 @@ import os
 import sys
 import pickle
 import numpy as np
-from params import *
+from handwriting.params import *
 import re
-from text_utils import *
+from handwriting.text_utils import *
 
 def get_transform(grayscale=False, convert=True):
 

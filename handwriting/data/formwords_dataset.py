@@ -1,7 +1,7 @@
 """ Prespecified forms that can be sliced up into a dataloader but with labels that allow them to be rebuilt after
 """
 
-from data.utils import chunkify
+from handwriting.data.utils import chunkify
 from __future__ import print_function, division
 import os
 import torch
@@ -12,7 +12,7 @@ from torch.utils.data import Dataset, DataLoader
 from pathlib import Path
 import csv
 from numpy.random import choice
-from data.basic_text_dataset import BasicTextDataset
+from handwriting.data.basic_text_dataset import BasicTextDataset
 
 from pathlib import Path
 folder = Path(os.path.dirname(__file__))

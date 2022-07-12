@@ -1,6 +1,6 @@
-from data.basic_text_dataset import BasicTextDataset
+from handwriting.data.basic_text_dataset import BasicTextDataset
 import random
-from text_utils import *
+from handwriting.text_utils import *
 
 class Wikipedia(BasicTextDataset):
     def __init__(self,

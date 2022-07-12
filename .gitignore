@@ -2,3 +2,4 @@ trocr/
 files/
 results/
 wandb/
+*.npy

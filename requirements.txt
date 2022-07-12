@@ -1,0 +1,9 @@
+docker-pycreds
+fonttools
+matplotlib
+tqdm
+sklearn
+xmltodict
+lmdb
+dominate
+datasets

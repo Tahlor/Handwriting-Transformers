@@ -1,5 +1,4 @@
-from dataset import *
-from wikipedia_dataset import Wikipedia
+from handwriting.data.dataset import *
 from datasets import load_dataset
 
 VOCABULARY = """Only thewigsofrcvdampbkuq.A-210xT5'MDL,RYHJ"ISPWENj&BC93VGFKz();#:!7U64Q8?+*ZX/%-"""

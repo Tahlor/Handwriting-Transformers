@@ -8,7 +8,7 @@ from torch.utils.data import Dataset, DataLoader
 from pathlib import Path
 import csv
 from numpy.random import choice
-from data.basic_text_dataset import BasicTextDataset
+from handwriting.data.basic_text_dataset import BasicTextDataset
 
 from pathlib import Path
 folder = Path(os.path.dirname(__file__))

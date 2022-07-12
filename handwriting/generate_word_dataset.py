@@ -2,9 +2,9 @@ import os
 import time
 
 from basic_text_dataset import BasicTextDataset
-from data.dataset import TextDataset, TextDatasetval
-from data.wikipedia_dataset import Wikipedia
-from data.unigram_dataset import Unigrams
+from handwriting.data.dataset import TextDataset, TextDatasetval
+from handwriting.data.wikipedia_dataset import Wikipedia
+from handwriting.data.unigram_dataset import Unigrams
 import torch
 import cv2
 import os
@@ -12,7 +12,7 @@ import numpy as np
 from models.model import TRGAN
 from params import *
 from torch import nn
-from data.dataset import get_transform
+from handwriting.data.dataset import get_transform
 import pickle
 from PIL import Image
 import tqdm

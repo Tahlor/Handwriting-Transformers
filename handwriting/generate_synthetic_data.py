@@ -19,8 +19,8 @@ from util import render
 
 MODEL = "IAM"
 STYLE = "IAM"
-models = {"IAM": 'files/iam_model.pth', "CVL": 'files/cvl_model.pth'}
-styles = {"IAM": 'files/IAM-32.pickle', "CVL": 'files/CVL-32.pickle'}
+models = {"IAM": 'data/files/iam_model.pth', "CVL": 'data/files/cvl_model.pth'}
+styles = {"IAM": 'data/files/IAM-32.pickle', "CVL": 'data/files/CVL-32.pickle'}
 
 
 class Generator():
@@ -28,9 +28,9 @@ class Generator():
         self.output_path = output_path
         self.model_path = models[MODEL]
         self.images_path = styles[STYLE]
-        #self.model_path = 'files/cvl_model.pth'; self.images_path = 'files/CVL-32.pickle' #(cvl)
-        #self.model_path = 'files/iam_model.pth'; self.images_path = 'files/CVL-32.pickle' #(iam-cvl-cross)
-        #self.model_path = 'files/cvl_model.pth'; self.images_path = 'files/IAM-32.pickle' #(cvl-iam-cross)#
+        #self.model_path = 'data/files/cvl_model.pth'; self.images_path = 'data/files/CVL-32.pickle' #(cvl)
+        #self.model_path = 'data/files/iam_model.pth'; self.images_path = 'data/files/CVL-32.pickle' #(iam-cvl-cross)
+        #self.model_path = 'data/files/cvl_model.pth'; self.images_path = 'data/files/IAM-32.pickle' #(cvl-iam-cross)#
 
         print ('(1) Loading next_text_dataset files...')
 

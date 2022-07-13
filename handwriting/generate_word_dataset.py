@@ -1,7 +1,7 @@
 import os
 import time
 from collections import defaultdict
-from basic_text_dataset import BasicTextDataset
+from handwriting.data.basic_text_dataset import BasicTextDataset
 from handwriting.data.dataset import TextDataset, TextDatasetval
 from handwriting.data.wikipedia_dataset import Wikipedia
 from handwriting.data.unigram_dataset import Unigrams
@@ -21,14 +21,14 @@ import sys
 from datasets import load_dataset
 from torch.utils.data import DataLoader
 
-from trivial_dataset import TrivialDataset
+from handwriting.data.trivial_dataset import TrivialDataset
 from util import render
 from math import ceil
 
 MODEL = "IAM"
 STYLE = "IAM"
-models = {"IAM": 'files/iam_model.pth', "CVL": 'files/cvl_model.pth'}
-styles = {"IAM": 'files/IAM-32.pickle', "CVL": 'files/CVL-32.pickle'}
+models = {"IAM": 'data/files/iam_model.pth', "CVL": 'data/files/cvl_model.pth'}
+styles = {"IAM": 'data/files/IAM-32.pickle', "CVL": 'data/files/CVL-32.pickle'}
 
 def get_model(model_path):
     print('(2) Loading model...')
@@ -133,10 +133,14 @@ class Generator():
                 source=f"{MODEL}_{STYLE}"
             )
             for result in results:
-                author_id = f"{result}_{MODEL}_{STYLE}"
+                author_id = f"{result['author_id']}_{MODEL}_{STYLE}"
                 if not author_id in master_list:
                     master_list[author_id] = defaultdict(list)
-                master_list[author_id][result["raw_text"]].append(result['words'])
+
+                # Deal with multiple words
+                words = result["raw_text"].split(" ")
+                for i, word in enumerate(result['words']):
+                    master_list[author_id][words[i]].append(word)
 
         if save_path:
             np.save(save_path, master_list, allow_pickle=True)
@@ -171,10 +175,8 @@ if __name__ == '__main__':
                                               encode_function=model.netconverter.encode)
 
     else:
-        basic_text_dataset = BasicTextDataset(Unigrams(),
+        basic_text_dataset = BasicTextDataset(Unigrams(sample=False),
                          set(ALPHABET))
-
-
     g = Generator(model=model, next_text_dataset=basic_text_dataset, )
     # Get random style
     #style = next(iter(g.style_image_and_text_dataset))
@@ -185,7 +187,7 @@ if __name__ == '__main__':
     i = 0
     master_list = None
     while True:
-        master_list = g.generate_new_samples(style, save_path=f"./data/synth_hw/style_{author_id}_samples_{i}.npy", master_list=master_list)
+        master_list = g.generate_new_samples(style, save_path=f"./data/datasets/synth_hw/style_{author_id}_samples_{i}.npy", master_list=master_list)
         i+=1
         print(i)
 

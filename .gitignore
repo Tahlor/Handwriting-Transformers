@@ -7,3 +7,4 @@ datasets/
 *.npy
 *.pth
 *.pickle
+*.pyc

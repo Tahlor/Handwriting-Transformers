@@ -7,15 +7,15 @@ import random
 import unicodedata
 import sys
 import torchvision.models as models
-from models.transformer import *
+from handwriting.models.transformer import *
 from .BigGAN_networks import *
-from params import *
+from handwriting.params import *
 from .OCR_network import *
-from models.blocks import LinearBlock, Conv2dBlock, ResBlocks, ActFirstResBlock
-from util.util import toggle_grad, loss_hinge_dis, loss_hinge_gen, ortho, default_ortho, toggle_grad, prepare_z_y, \
+from handwriting.models.blocks import LinearBlock, Conv2dBlock, ResBlocks, ActFirstResBlock
+from handwriting.util.util import toggle_grad, loss_hinge_dis, loss_hinge_gen, ortho, default_ortho, toggle_grad, prepare_z_y, \
     make_one_hot, to_device, multiple_replace, random_word
-from models.inception import InceptionV3, calculate_frechet_distance
-from data.dataset import TextDataset, TextDatasetval
+from handwriting.models.inception import InceptionV3, calculate_frechet_distance
+from handwriting.data.dataset import TextDataset, TextDatasetval
 import cv2
 import time
 import matplotlib.pyplot as plt
@@ -428,7 +428,7 @@ class TRGAN(nn.Module):
             words = []
             output += [{"style_references":style_references[batch_author_idx],
                                  "words":words,
-                                 "author":author_id,
+                                 "author_id":author_id,
                                  "source":source,
                                  "raw_text":raw_text[batch_author_idx]}]
 
@@ -1336,13 +1336,3 @@ class TRGAN(nn.Module):
                     net.cuda(self.gpu_ids[0])
                 else:
                     torch.save(net.cpu().state_dict(), save_path)
-
-
-
-
-
-
-
-
-
-

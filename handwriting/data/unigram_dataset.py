@@ -19,7 +19,7 @@ class Unigrams(Dataset):
     def __init__(self,
                  csv_file=csv_file,
                  top_k=10000,
-                 weighted_sample=True):
+                 sample="weighted"):
         """
         Args:
             csv_file (string): Path to unigram next_text_dataset with frequencies/weight
@@ -28,7 +28,12 @@ class Unigrams(Dataset):
 
         self.csv_file = Path(csv_file)
         self.words, self.counts = self.load_dataset(top_k)
-        self.sample = self.weighted_sample if weighted_sample else self.unweighted_sample
+        if sample == "weighted":
+            self.sample = self.weighted_sample
+        elif sample:
+            self.sample = self.unweighted_sample
+        else:
+            self.sample = self.no_sample
 
     def load_dataset(self, top_k):
         with self.csv_file.open() as fb:
@@ -39,11 +44,14 @@ class Unigrams(Dataset):
         counts = counts / np.sum(counts)
         return words, counts
 
-    def weighted_sample(self, n=1):
+    def weighted_sample(self, index, n=1):
         return choice(self.words, n,p=self.counts)
 
-    def unweighted_sample(self, n=1):
+    def unweighted_sample(self, index, n=1):
         return choice(self.words, n)
+
+    def no_sample(self, idx=0, n=1):
+        return self.words[idx:idx+n]
 
     def get_text(self):
         return self.sample()
@@ -52,7 +60,15 @@ class Unigrams(Dataset):
         return len(self.words)
 
     def __getitem__(self, idx):
-        return self.sample()[0]
+        """ Only return 1 item
+
+        Args:
+            idx:
+
+        Returns:
+
+        """
+        return self.sample(idx)[0]
 
 if __name__ == '__main__':
     U = Unigrams(csv_file="./datasets/unigram_freq.csv")

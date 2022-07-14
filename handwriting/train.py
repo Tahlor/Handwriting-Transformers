@@ -1,7 +1,7 @@
 import os
 
 os.environ["CUDA_VISIBLE_DEVICES"]="0"
-os.environ["WANDB_API_KEY"] = "00d63d49ce356cb935e4662538b8da23b47de626"
+os.environ["WANDB_API_KEY"] = "5d9b7652deb1619596c4354a415b62d09f8d9ed0"
 
 from pathlib import Path
 import time
@@ -20,7 +20,7 @@ import wandb
 
 def main():
 
-    wandb.init(project="hwt-final", name = EXP_NAME)
+    wandb.init(project="handwriting-transformers", name = EXP_NAME)
 
     init_project()
 
@@ -104,12 +104,8 @@ def main():
                     
                     })
 
-                    
-        
         wandb.log({ "result":[wandb.Image(page, caption="page"),wandb.Image(page_val, caption="page_val")],
                     })
-
-        
 
         print ({'EPOCH':epoch, 'TIME':end_time-start_time, 'LOSSES': losses})
 
@@ -118,5 +114,4 @@ def main():
 
 
 if __name__ == "__main__":
-    
     main()

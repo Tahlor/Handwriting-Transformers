@@ -3,8 +3,8 @@ import time
 from collections import defaultdict
 from handwriting.data.basic_text_dataset import BasicTextDataset
 from handwriting.data.dataset import TextDataset, TextDatasetval
-from handwriting.data.wikipedia_dataset import Wikipedia
-from handwriting.data.unigram_dataset import Unigrams
+from textgen.wikipedia_dataset import Wikipedia
+from textgen.unigram_dataset import Unigrams
 import torch
 import cv2
 import os
@@ -21,7 +21,7 @@ import sys
 from datasets import load_dataset
 from torch.utils.data import DataLoader
 
-from handwriting.data.trivial_dataset import TrivialDataset
+from textgen.trivial_dataset import TrivialDataset
 from util import render
 from math import ceil
 

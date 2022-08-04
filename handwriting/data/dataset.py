@@ -160,7 +160,7 @@ def collate_fn_text(data):
 class TextDatasetval():
     """ preset_author: ALL items will be for a specific author, must be set to None to iterate through dataset
 
-        WARNING: DO NOT CHANGE preset_author after Dataloader is created
+        WARNING: DO NOT CHANGE preset_author after Dataloader is created!
                  Keep shuffle on--code assumes shuffle is on here OR in Dataloader, otherwise next(iter()) won't work on Dataloader
 
 

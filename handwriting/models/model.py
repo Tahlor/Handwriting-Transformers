@@ -21,6 +21,9 @@ import time
 import matplotlib.pyplot as plt
 import shutil
 import matplotlib.pyplot as plt
+from pathlib import Path
+root = Path(os.path.dirname(__file__)).parent
+
 
 def get_rgb(x):
   R = 255 - int(int(x>0.5)*255*(x-0.5)/0.5)
@@ -193,10 +196,6 @@ class Generator(nn.Module):
         return OUT_IMGS
         
 
-
-    
-
-
     def forward(self, ST, QR, QRs = None, mode = 'train'):
 
         #Attention Visualization Init    
@@ -327,9 +326,8 @@ class TRGAN(nn.Module):
         self.lex = lex
 
 
-        f = open('mytext.txt', 'r') 
-
-        self.text = [j.encode() for j in sum([i.split(' ') for i in f.readlines()], [])]#[:NUM_EXAMPLES]
+        with (root / 'data/files/mytext.txt').open('r') as f:
+            self.text = [j.encode() for j in sum([i.split(' ') for i in f.readlines()], [])]#[:NUM_EXAMPLES]
         self.eval_text_encode, self.eval_len_text = self.netconverter.encode(self.text)
         self.eval_text_encode = self.eval_text_encode.to(DEVICE).repeat(batch_size, 1, 1)
 
@@ -394,10 +392,9 @@ class TRGAN(nn.Module):
                                 style_references,
                                 author_ids,
                                 raw_text,
-                                eval_text_encode = None,
-                                eval_len_text = None,
-                                source="",
-
+                                eval_text_encode=None,
+                                eval_len_text=None,
+                                source=""
                             ):
         """
 
@@ -803,8 +800,6 @@ class TRGAN(nn.Module):
                     param.requires_grad = requires_grad
 
     def forward(self):
-
-
         self.real = self.input['img'].to(DEVICE)
         self.label = self.input['label']
         self.sdata = self.input['imgs_padded'].to(DEVICE)

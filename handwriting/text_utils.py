@@ -57,6 +57,8 @@ symbol_replacements = {"}":")",
 ")":")",
 #" ()":""
 }
+
+
 re_funcs = []
 for key in symbol_replacements.keys():
     k = f"\{key}" if key in "()[]" else key
@@ -83,4 +85,5 @@ def test(text):
 
 
 if __name__ == '__main__':
-    pass
+    x = str.translate("this ($)%*&)#", symbol_replacements)
+    print(x)

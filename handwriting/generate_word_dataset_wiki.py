@@ -160,12 +160,13 @@ if __name__ == '__main__':
     from textgen.unigram_dataset import Unigrams
     model = get_model(models[MODEL])
 
-    if False:
+    if True:
+        from text_utils import VOCABULARY
         basic_text_dataset = Wikipedia(
                 dataset=load_dataset("wikipedia", "20220301.en")["train"],
-                vocabulary=set(ALPHABET),  # set(self.model.netconverter.dict.keys())
+                vocabulary=set(VOCABULARY),  # set(self.model.netconverter.dict.keys())
                 encode_function=model.netconverter.encode,
-                min_sentence_length=32,
+                min_sentence_length=60,
                 max_sentence_length=64
             )
     elif False:

@@ -15,7 +15,7 @@ with open('requirements.txt') as f:
 print(requirements)
 
 setup(name='handwriting',
-      version='0.0.44',
+      version='0.0.45',
       description='handwriting',
       long_description= "" if not os.path.isfile("README.md") else read_md('README.md'),
       author='Taylor Archibald',

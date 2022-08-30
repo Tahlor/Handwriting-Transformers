@@ -37,6 +37,7 @@ class SavedHandwriting(Dataset):
         """
         super().__init__()
         self.format = format
+        self.dataset_path = dataset_path
         self.dataset = np.load(dataset_path, allow_pickle=True).item()
         self.random_ok = random_ok
         self.conversion = conversion
@@ -67,18 +68,23 @@ class SavedHandwriting(Dataset):
         return author, random.choice(list(self.dataset[author].keys()))
 
     def get(self,
+            author,
+            word):
+        return self._get(author, word)
+
+    def _get(self,
             author=None,
             word=None):
-        word_cln=word.strip()
+        word=word.strip()
         if author is None:
             author = self.get_random_author()
         if word is None:
             _, word = self.get_random_word_from_author(author)
-        elif self.random_ok and word_cln not in self.dataset[author]:
+        elif self.random_ok and word not in self.dataset[author]:
             warnings.warn("Requested word not available, using random word")
             _, word = self.get_random_word_from_author(author)
 
-        word_img = random.choice(self.dataset[author][word_cln])
+        word_img = random.choice(self.dataset[author][word])
         if self.format=="numpy":
             word_img = np.array(word_img)
 
@@ -123,6 +129,56 @@ class SavedHandwriting(Dataset):
 
     def render_phrase(self, max_spacing, min_spacing):
         pass
+
+
+class SavedHandwritingRandomAuthor(SavedHandwriting):
+    def __init__(self,
+                 format: Literal['numpy', 'PIL'],
+                 dataset_root,
+                 font_size=None,
+                 random_ok=False,
+                 conversion=None,
+                 switch_frequency=1000,
+                 *args,
+                 **kwargs):
+        """ Each batch will be all the same author
+            Switch to new author every switch_frequency number of words
+        """
+        self.dataset_root = Path(dataset_root)
+        assert self.dataset_root.is_dir()
+        self.data_files = list(self.dataset_root.rglob("*.npy"))
+        self.switch_frequency = switch_frequency
+        if not self.data_files:
+            raise Exception("No handwriting data files found")
+
+        self.dataset_path = self.reset()
+        self.global_step = 0
+
+        super().__init__(format=format,
+                         dataset_path=self.dataset_path,
+                         font_size=font_size,
+                         random_ok=random_ok,
+                         conversion=conversion)
+
+    def next_author(self):
+        self.dataset_path = self.dataset_queue.pop() if self.dataset_queue else self.reset()
+        self.dataset = np.load(self.dataset_path, allow_pickle=True).item()
+        print("Next author")
+
+    def reset(self):
+        self.dataset_queue = self.data_files.copy()
+        random.shuffle(self.dataset_queue)
+        return self.dataset_queue.pop()
+
+    def get(self,
+            author,
+            word):
+        self.global_step +=1
+        if self.global_step % self.switch_frequency == 0:
+            self.next_author()
+        return self._get(author, word)
+
+
 
 if __name__ == '__main__':
     dataset = SavedHandwriting("./datasets/synth_hw/style_298_samples_0.npy")

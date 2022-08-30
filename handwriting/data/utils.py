@@ -1,5 +1,7 @@
+from pathlib import Path
 import numpy as np
 from math import ceil
+from tqdm import tqdm
 
 def chunkify(text, max_words):
     """ Chunkify a sentence based on batch_size and maximum number of words
@@ -50,3 +52,15 @@ def show(img):
     from matplotlib import pyplot as plt
     plt.imshow(img, cmap="gray")
     plt.show()
+
+def fix_handwriting_keys():
+    for path in Path("/home/taylor/anaconda3/datasets/HANDWRITING_WORD_DATA").rglob("*.npy"):
+        dataset = np.load(path, allow_pickle=True).item()
+        for _key,_item in dataset.items():
+            keys = list(_item.keys())
+            for key in tqdm(keys):
+                dataset[_key][key.strip()] = _item.pop(key)
+        np.save(path, dataset)
+
+if __name__ == "__main__":
+    fix_handwriting_keys()

@@ -1,3 +1,4 @@
+wheel
 docker-pycreds
 fonttools
 matplotlib
@@ -7,3 +8,4 @@ xmltodict
 lmdb
 dominate
 datasets
+pypandoc

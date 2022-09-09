@@ -15,7 +15,7 @@ with open('requirements.txt') as f:
 print(requirements)
 
 setup(name='hwgen',
-      version='0.0.48',
+      version='0.0.49',
       description='hwgen',
       long_description= "" if not os.path.isfile("README.md") else read_md('README.md'),
       author='Taylor Archibald',

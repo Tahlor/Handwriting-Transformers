@@ -14,16 +14,16 @@ with open('requirements.txt') as f:
     requirements = f.read().splitlines()
 print(requirements)
 
-setup(name='handwriting',
-      version='0.0.47',
-      description='handwriting',
+setup(name='hwgen',
+      version='0.0.48',
+      description='hwgen',
       long_description= "" if not os.path.isfile("README.md") else read_md('README.md'),
       author='Taylor Archibald',
       author_email='taylornarchibald@gmail.com',
-      url='https://github.com/tahlor/handwriting',
+      url='https://github.com/tahlor/hwgen',
       setup_requires=['pytest-runner',],
       tests_require=['pytest','python-coveralls'],
-      packages=['handwriting'],
+      packages=['hwgen'],
       install_requires=[
           *requirements,
       ],

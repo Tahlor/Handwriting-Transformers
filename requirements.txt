@@ -9,3 +9,9 @@ lmdb
 dominate
 datasets
 pypandoc
+
+-f git+https://github.ancestry.com/tarchibald/download_resources
+download_resources
+-f git+https://github.ancestry.com/tarchibald/textgen
+textgen
+

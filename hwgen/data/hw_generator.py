@@ -1,33 +1,23 @@
-import os
-import time
 from collections import defaultdict
-from hwgen.data.basic_text_dataset import BasicTextDataset
-from hwgen.data.dataset import TextDataset, TextDatasetval
+from textgen.basic_text_dataset import BasicTextDataset
+from hwgen.data.dataset import  TextDatasetval
 from textgen.wikipedia_dataset import Wikipedia
 from textgen.unigram_dataset import Unigrams
-import torch
 import cv2
-import os
 import numpy as np
 from hwgen.models.model import TRGAN
 from hwgen.params import *
-from torch import nn
-from hwgen.data.dataset import get_transform
-import pickle
-from PIL import Image
 from tqdm import tqdm
-import shutil
-import sys
 from datasets import load_dataset
 from torch.utils.data import DataLoader, Dataset
 from textgen.trivial_dataset import TrivialDataset
 from hwgen.util import render
-from math import ceil
 import random
 import warnings
 from pathlib import Path
 folder = Path(os.path.dirname(__file__))
 
+VOCABULARY = """Only thewigsofrcvdampbkuq.A-210xT5'MDL,RYHJ"ISPWENj&BC93VGFKz();#:!7U64Q8?+*ZX/"""
 
 def get_model(model_path):
     print('(2) Loading model...')
@@ -265,7 +255,6 @@ if __name__ == '__main__':
     # Load novel text next_text_dataset
     text_data = trivial
 
-    from hwgen.data.basic_text_dataset import VOCABULARY
     basic_text_dataset = Wikipedia(
                 dataset=load_dataset("wikipedia", "20220301.en")["train"],
                 vocabulary=set(VOCABULARY),  # set(self.model.netconverter.dict.keys())

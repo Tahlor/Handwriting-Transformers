@@ -5,7 +5,7 @@
 # Date   : 27/01/2018
 #
 # This file is part of Synchronized-BatchNorm-PyTorch.
-# https://github.com/vacancy/Synchronized-BatchNorm-PyTorch
+# https://github.ancestry.com/vacancy/Synchronized-BatchNorm-PyTorch
 # Distributed under MIT License.
 
 import unittest

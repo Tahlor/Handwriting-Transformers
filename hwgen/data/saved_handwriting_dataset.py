@@ -1,18 +1,11 @@
 from __future__ import print_function, division
 import random
 import warnings
-import os
-import torch
-import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset
 from pathlib import Path
-import csv
-from numpy.random import choice
-from hwgen.data.basic_text_dataset import BasicTextDataset
 from hwgen.data.utils import show
-from PIL import Image, ImageDraw, ImageFilter
+from PIL import Image
 from cv2 import resize
 from typing import Literal
 

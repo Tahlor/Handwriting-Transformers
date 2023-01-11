@@ -7,14 +7,14 @@ import random
 import unicodedata
 import sys
 import torchvision.models as models
-from models.transformer import *
+from hwgen.models.transformer import *
 from .BigGAN_networks import *
-from params import *
+from hwgen.params import *
 from .OCR_network import *
-from models.blocks import LinearBlock, Conv2dBlock, ResBlocks, ActFirstResBlock
-from util.util import toggle_grad, loss_hinge_dis, loss_hinge_gen, ortho, default_ortho, toggle_grad, prepare_z_y, \
+from hwgen.models.blocks import LinearBlock, Conv2dBlock, ResBlocks, ActFirstResBlock
+from hwgen.util.util import toggle_grad, loss_hinge_dis, loss_hinge_gen, ortho, default_ortho, toggle_grad, prepare_z_y, \
     make_one_hot, to_device, multiple_replace, random_word
-from models.inception import InceptionV3, calculate_frechet_distance
+from hwgen.models.inception import InceptionV3, calculate_frechet_distance
 
 class FCNDecoder(nn.Module):
     def __init__(self, ups=3, n_res=2, dim=512, out_dim=1, res_norm='adain', activ='relu', pad_type='reflect'):

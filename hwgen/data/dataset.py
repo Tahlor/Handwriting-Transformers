@@ -17,7 +17,7 @@ import pickle
 import numpy as np
 from hwgen.params import *
 import re
-from hwgen.text_utils import *
+from hwgen.utils import *
 
 def get_transform(grayscale=False, convert=True):
 

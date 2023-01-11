@@ -1,29 +1,19 @@
-import os
-import time
+
 from collections import defaultdict
-from hwgen.data.basic_text_dataset import BasicTextDataset
-from hwgen.data.dataset import TextDataset, TextDatasetval
+from hwgen.data.dataset import  TextDatasetval
 from textgen.wikipedia_dataset import Wikipedia
 from textgen.unigram_dataset import Unigrams
 import torch
 import cv2
-import os
 import numpy as np
-from models.model import TRGAN
-from params import *
-from torch import nn
-from hwgen.data.dataset import get_transform
-import pickle
-from PIL import Image
+from hwgen.models.model import TRGAN
+from hwgen.params import *
 from tqdm import tqdm
-import shutil
-import sys
 from datasets import load_dataset
 from torch.utils.data import DataLoader
 
 from textgen.trivial_dataset import TrivialDataset
-from util import render
-from math import ceil
+from hwgen.util import render
 
 MODEL = "IAM"
 STYLE = "IAM"
@@ -151,7 +141,7 @@ class Generator():
 
 
 
-uni = Unigrams(csv_file="./data/datasets/unigram_freq.csv")
+uni = Unigrams(csv_file="../data/datasets/unigram_freq.csv")
 trivial = TrivialDataset("This is some data right here")
 
 if __name__ == '__main__':
@@ -161,7 +151,7 @@ if __name__ == '__main__':
     model = get_model(models[MODEL])
 
     if True:
-        from text_utils import VOCABULARY
+        from hwgen.utils import VOCABULARY
         basic_text_dataset = Wikipedia(
                 dataset=load_dataset("wikipedia", "20220301.en")["train"],
                 vocabulary=set(VOCABULARY),  # set(self.model.netconverter.dict.keys())

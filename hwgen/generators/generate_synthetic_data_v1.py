@@ -1,21 +1,21 @@
 import os
 import time
-from data.dataset import TextDataset, TextDatasetval, Wikipedia
+from hwgen.data.dataset import TextDataset, TextDatasetval, Wikipedia
 import torch
 import cv2
 import os
 import numpy as np
-from models.model import TRGAN
-from params import *
+from hwgen.models.model import TRGAN
+from hwgen.params import *
 from torch import nn
-from data.dataset import get_transform
+from hwgen.data.dataset import get_transform
 import pickle
 from PIL import Image
 import tqdm
 import shutil
 import sys
 from datasets import load_dataset
-from util import render
+from hwgen.util import render
 
 MODEL = "IAM"
 STYLE = "IAM"

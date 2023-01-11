@@ -1,29 +1,20 @@
-import os
-import time
 from collections import defaultdict
-from hwgen.data.basic_text_dataset import BasicTextDataset
-from hwgen.data.dataset import TextDataset, TextDatasetval
+from textgen.basic_text_dataset import BasicTextDataset
+
+from hwgen.data.dataset import  TextDatasetval
 from textgen.wikipedia_dataset import Wikipedia
 from textgen.unigram_dataset import Unigrams
 import torch
 import cv2
-import os
 import numpy as np
-from models.model import TRGAN
-from params import *
-from torch import nn
-from hwgen.data.dataset import get_transform
-import pickle
-from PIL import Image
+from hwgen.models.model import TRGAN
+from hwgen.params import *
 from tqdm import tqdm
-import shutil
-import sys
 from datasets import load_dataset
 from torch.utils.data import DataLoader
 
 from textgen.trivial_dataset import TrivialDataset
-from util import render
-from math import ceil
+from hwgen.util import render
 
 MODEL = "CVL"
 STYLE_DATA_SOURCE = "CVL"
@@ -160,7 +151,7 @@ class Generator():
 
 
 
-uni = Unigrams(csv_file="./data/datasets/unigram_freq.csv")
+uni = Unigrams(csv_file="../data/datasets/unigram_freq.csv")
 trivial = TrivialDataset("This is some data right here")
 
 def misc(model):

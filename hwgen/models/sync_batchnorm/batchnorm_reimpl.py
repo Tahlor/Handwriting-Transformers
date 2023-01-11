@@ -5,7 +5,7 @@
 # Date   : 11/01/2018
 #
 # This file is part of Synchronized-BatchNorm-PyTorch.
-# https://github.com/vacancy/Synchronized-BatchNorm-PyTorch
+# https://github.ancestry.com/vacancy/Synchronized-BatchNorm-PyTorch
 # Distributed under MIT License.
 
 import torch
@@ -22,7 +22,7 @@ class BatchNorm2dReimpl(nn.Module):
 
     Author: acgtyrant
     See also:
-    https://github.com/vacancy/Synchronized-BatchNorm-PyTorch/issues/14
+    https://github.ancestry.com/vacancy/Synchronized-BatchNorm-PyTorch/issues/14
     """
     def __init__(self, num_features, eps=1e-5, momentum=0.1):
         super().__init__()

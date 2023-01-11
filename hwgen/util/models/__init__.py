@@ -56,7 +56,7 @@ def create_model(opt):
     This is the main interface between this package and 'train.py'/'test.py'
 
     Example:
-        >>> from hwgen.models import create_model
+        >>> from models import create_model
         >>> model = create_model(opt)
     """
     model = find_model_using_name(opt.model)

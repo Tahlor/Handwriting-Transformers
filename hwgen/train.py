@@ -6,15 +6,15 @@ os.environ["WANDB_API_KEY"] = "5d9b7652deb1619596c4354a415b62d09f8d9ed0"
 from pathlib import Path
 import time
 from data.dataset import TextDataset, TextDatasetval
-from hwgen.models import create_model
+from models import create_model
 import torch
 import cv2
 import os
 import numpy as np
 from itertools import cycle
 from scipy import linalg
-from hwgen.models.model import TRGAN
-from hwgen.params import *
+from models.model import TRGAN
+from params import *
 from torch import nn
 import wandb
 

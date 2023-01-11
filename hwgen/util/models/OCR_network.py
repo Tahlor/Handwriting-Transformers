@@ -1,10 +1,10 @@
 import torch.nn as nn
-from hwgen.util.util import to_device
+from util.util import to_device
 from torch.nn import init
 import os
 import torch
 from .networks import *
-from hwgen.params import *
+from params import *
 
 class BidirectionalLSTM(nn.Module):
 

@@ -1,9 +1,14 @@
+wheel
 docker-pycreds
 fonttools
 matplotlib
 tqdm
-sklearn
+scikit-learn
 xmltodict
 lmdb
 dominate
 datasets
+pypandoc
+typing_extensions
+torch
+torchvision

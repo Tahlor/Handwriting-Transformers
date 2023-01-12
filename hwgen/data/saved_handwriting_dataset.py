@@ -2,7 +2,6 @@ from __future__ import print_function, division
 import random
 import warnings
 import os
-import torch
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -14,7 +13,12 @@ from hwgen.data.basic_text_dataset import BasicTextDataset
 from hwgen.data.utils import show
 from PIL import Image, ImageDraw, ImageFilter
 from cv2 import resize
-from typing import Literal
+import sys
+
+if sys.version_info >= (3, 8):
+    from typing import Literal
+else:
+    from typing_extensions import Literal
 
 class SavedHandwriting(Dataset):
     """ !!! This should inherit from the same thing as the font renderer?

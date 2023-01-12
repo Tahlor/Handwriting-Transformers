@@ -12,7 +12,10 @@ __pycache__/
 
 docgen/rendertext/data
 
+# Ignore all files and directories in the top-level "data" directory
 data/
+# But, allow the "hwgen/data" directory and its contents to be tracked
+!hwgen/data/
 temp/
 password*
 credentials*

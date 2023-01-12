@@ -13,15 +13,16 @@ __pycache__/
 docgen/rendertext/data
 
 # Ignore all files and directories in the top-level "data" directory
-data/
-# But, allow the "hwgen/data" directory and its contents to be tracked
-!hwgen/data/
 temp/
 password*
 credentials*
 *credentials*
 *.swp
 *deprecated/
+wandb/
+data/
+# But, allow the "hwgen/data" directory and its contents to be tracked
+!hwgen/data/
 
 # C extensions
 *.so
@@ -120,5 +121,5 @@ venv2/
 *.pth
 *.pickle
 *.pyc
-*egg*
+*.egg*
 .idea

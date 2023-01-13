@@ -12,3 +12,5 @@ pypandoc
 typing_extensions
 torch
 torchvision
+
+download_resources @ git+ssh://git@github.ancestry.com/tarchibald/download_resources@ancestry#egg=download_resources

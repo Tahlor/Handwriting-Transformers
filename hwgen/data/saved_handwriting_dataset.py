@@ -1,26 +1,24 @@
 from __future__ import print_function, division
+
 import random
+import sys
 import warnings
-import os
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-from torch.utils.data import Dataset, DataLoader
 from pathlib import Path
-import csv
-from numpy.random import choice
+
+import numpy as np
+from PIL import Image
+from cv2 import resize
+from torch.utils.data import Dataset
+
 from hwgen.data.basic_text_dataset import BasicTextDataset
 from hwgen.data.utils import show
-from PIL import Image, ImageDraw, ImageFilter
-from cv2 import resize
-import sys
 
 if sys.version_info >= (3, 8):
     from typing import Literal
 else:
     from typing_extensions import Literal
 
-class SavedHandwriting(Dataset):
+class SavedHandwriting(Dataset, BasicTextDataset):
     """ !!! This should inherit from the same thing as the font renderer?
         Font render / HW render could be same package???
         Move img conversion utilties somewhere

@@ -12,5 +12,4 @@ pypandoc
 typing_extensions
 torch
 torchvision
-
 download_resources @ git+ssh://git@github.com/tahlor/download_resources@galois#egg=download_resources

@@ -18,29 +18,35 @@ if sys.version_info >= (3, 8):
 else:
     from typing_extensions import Literal
 
-class SavedHandwriting(Dataset, BasicTextDataset):
+class SavedHandwriting(BasicTextDataset, Dataset):
     """ !!! This should inherit from the same thing as the font renderer?
         Font render / HW render could be same package???
         Move img conversion utilties somewhere
+        Don't inherit torch.utils.data.Dataset, it must be initialized on some kind of data
     """
     def __init__(self,
                  format: Literal['numpy', 'PIL'],
-                 dataset_path,
+                 dataset_path=None,
                  font_size=None,
                  random_ok=False,
                  conversion=None):
         """ Dataset {author: {word1:[word1_img1, word1_img2], word2:[word2_img1, ...]}}
 
         Args:
-            dataset_path:
+            dataset_path: path to dataset; 'sample' will download a sample from S3
             random_ok (bool): Supply random word if requested word not available
             author (str): Author ID
             conversion (func): conversion function to run on images
         """
-        super().__init__()
-        self.format = format
         self.dataset_path = dataset_path
         self.dataset = np.load(dataset_path, allow_pickle=True).item()
+
+        super().__init__(self.dataset)
+        self.format = format
+        if dataset_path == "sample":
+            from hwgen.resources import download_handwriting
+            dataset_path = download_handwriting()
+
         self.random_ok = random_ok
         self.conversion = conversion
         self._font_size = font_size
@@ -136,7 +142,7 @@ class SavedHandwriting(Dataset, BasicTextDataset):
 class SavedHandwritingRandomAuthor(SavedHandwriting):
     def __init__(self,
                  format: Literal['numpy', 'PIL'],
-                 dataset_root,
+                 dataset_root=None,
                  font_size=None,
                  random_ok=False,
                  conversion=None,
@@ -146,6 +152,13 @@ class SavedHandwritingRandomAuthor(SavedHandwriting):
         """ Each batch will be all the same author
             Switch to new author every switch_frequency number of words
         """
+        if dataset_root == "sample":
+            from hwgen.resources import download_handwriting
+            dataset_root = Path(download_handwriting()).parent
+        elif dataset_root == "eng_latest":
+            from hwgen.resources import download_handwriting_zip
+            dataset_root = download_handwriting_zip()
+
         self.dataset_root = Path(dataset_root)
         assert self.dataset_root.is_dir()
         self.data_files = list(self.dataset_root.rglob("*.npy"))

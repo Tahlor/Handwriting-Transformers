@@ -1,7 +1,7 @@
 import re
 import unicodedata
 
-def filter_short_lines(text, minimum_length, end_punctuation):
+def filter_short_lines(text, minimum_length):
     """ Exclude lines with fewer than `minimum_length` words
 
     Returns:
@@ -16,12 +16,12 @@ def filter_short_lines(text, minimum_length, end_punctuation):
 
 
 def filter_lines_to_sentences(text,end_punctuation="."):
-    """ Exclude lines with fewer than `minimum_length` words
+    """ Only include lines that appear to be complete sentences
 
     Returns:
 
     """
-    return "\n".join([line for line in text.split('\n') if line and line[-1]=="."])
+    return "\n".join([line for line in text.split('\n') if line and line[-1]==end_punctuation])
 
 def filter_with_punctuation():
     lower_case = re.compile(r'[^a-z0-9 \.]+')

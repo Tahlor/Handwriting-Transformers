@@ -13,3 +13,4 @@ typing_extensions
 torch
 torchvision
 download_resources @ git+ssh://git@github.com/tahlor/download_resources@galois#egg=download_resources
+textgen @ git+ssh://git@github.com/tahlor/textgen@galois#egg=textgen

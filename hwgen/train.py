@@ -5,6 +5,7 @@ os.environ["WANDB_API_KEY"] = "5d9b7652deb1619596c4354a415b62d09f8d9ed0"
 
 from pathlib import Path
 import time
+import data.dataset as dataset
 from data.dataset import TextDataset, TextDatasetval
 from models import create_model
 import torch
@@ -18,13 +19,15 @@ from params import *
 from torch import nn
 import wandb
 
+BASEPATH = "./data/files/IAM-32.pickle"
+
 def main():
 
     wandb.init(project="handwriting-transformers", name = EXP_NAME)
 
     init_project()
 
-    TextDatasetObj = TextDataset(num_examples = NUM_EXAMPLES)
+    TextDatasetObj = TextDataset(base_path=BASEPATH, num_examples = NUM_EXAMPLES)
     dataset = torch.utils.data.DataLoader(
                 TextDatasetObj,
                 batch_size=batch_size,
@@ -33,7 +36,7 @@ def main():
                 pin_memory=True, drop_last=True,
                 collate_fn=TextDatasetObj.collate_fn)
 
-    TextDatasetObjval = TextDatasetval(num_examples = NUM_EXAMPLES)
+    TextDatasetObjval = TextDatasetval(base_path=BASEPATH, num_examples = NUM_EXAMPLES)
     datasetval = torch.utils.data.DataLoader(
                 TextDatasetObjval,
                 batch_size=batch_size,

@@ -1,6 +1,6 @@
 import torch
 import pandas as pd
-from .OCR_network import *
+from hwgen.models.OCR_network import *
 from torch.nn import CTCLoss, MSELoss, L1Loss
 from torch.nn.utils import clip_grad_norm_
 import random
@@ -8,14 +8,15 @@ import unicodedata
 import sys
 import torchvision.models as models
 from hwgen.models.transformer import *
-from .BigGAN_networks import *
+from hwgen.models.BigGAN_networks import *
 from hwgen.params import *
-from .OCR_network import *
+from hwgen.models.OCR_network import *
 from hwgen.models.blocks import LinearBlock, Conv2dBlock, ResBlocks, ActFirstResBlock
 from hwgen.util.util import toggle_grad, loss_hinge_dis, loss_hinge_gen, ortho, default_ortho, toggle_grad, prepare_z_y, \
     make_one_hot, to_device, multiple_replace, random_word
 from hwgen.models.inception import InceptionV3, calculate_frechet_distance
-from hwgen.data.dataset import TextDataset, TextDatasetval
+from textgen.data import dataset as textgen_dataset
+
 import cv2
 import time
 import matplotlib.pyplot as plt
@@ -24,6 +25,8 @@ import matplotlib.pyplot as plt
 from pathlib import Path
 root = Path(os.path.dirname(__file__)).parent
 
+# from params.py
+BASEPATH = DATASET_PATHS
 
 def get_rgb(x):
   R = 255 - int(int(x>0.5)*255*(x-0.5)/0.5)
@@ -356,7 +359,7 @@ class TRGAN(nn.Module):
 
         if mode == 'train':
 
-            TextDatasetObj = TextDataset(num_examples = self.eval_text_encode.shape[1])
+            TextDatasetObj = textgen_dataset.TextDataset(base_path=BASEPATH, num_examples = self.eval_text_encode.shape[1])
             dataset_real = torch.utils.data.DataLoader(
                         TextDatasetObj,
                         batch_size=batch_size,
@@ -367,7 +370,7 @@ class TRGAN(nn.Module):
 
         elif mode == 'test':
 
-            TextDatasetObjval = TextDatasetval(num_examples = self.eval_text_encode.shape[1])
+            TextDatasetObjval = textgen_dataset.TextDatasetval(base_path=BASEPATH, num_examples = self.eval_text_encode.shape[1])
             dataset_real = torch.utils.data.DataLoader(
                         TextDatasetObjval,
                         batch_size=batch_size,
@@ -1331,3 +1334,6 @@ class TRGAN(nn.Module):
                     net.cuda(self.gpu_ids[0])
                 else:
                     torch.save(net.cpu().state_dict(), save_path)
+
+if __name__=='__main__':
+    textgen_dataset.TextDataset()

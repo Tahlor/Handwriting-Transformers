@@ -22,7 +22,7 @@ DEFAULT_STYLE = "IAM"
 def get_model(model_path):
     print('(2) Loading odel...')
     model = TRGAN()
-    if not Path(model_path).exists() and Path(model_path).relative_to(HWR_MODEL_PATH):
+    if not Path(model_path).exists(): #and Path(model_path).relative_to(HWR_MODEL_PATH):
         download_model_resources()
     model.netG.load_state_dict(torch.load(model_path))
     print(model_path + ' : Model loaded Successfully')

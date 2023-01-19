@@ -1,7 +1,7 @@
 import os
 import time
 from collections import defaultdict
-from hwgen.data.basic_text_dataset import BasicTextDataset
+from textgen.basic_text_dataset import BasicTextDataset
 from hwgen.data.dataset import TextDataset, TextDatasetval
 from textgen.wikipedia_dataset import Wikipedia
 from textgen.unigram_dataset import Unigrams

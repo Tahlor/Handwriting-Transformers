@@ -1,6 +1,6 @@
 from collections import defaultdict
 from textgen.basic_text_dataset import BasicTextDataset
-from hwgen.data.dataset import  TextDatasetval
+from hwgen.data.dataset import TextDatasetval
 from textgen.wikipedia_dataset import Wikipedia
 from textgen.unigram_dataset import Unigrams
 import cv2
@@ -34,6 +34,15 @@ class HWGenerator(Dataset, BasicTextDataset):
                  batch_size=8,
                  output_path="results",
                  style="IAM"):
+        """
+
+        Args:
+            next_text_dataset: a BasicTextDataset that produces the text the generator will generate as HW
+            model: IAM or CVL or path to .pth file
+            batch_size:
+            output_path:
+            style: IAM, CVL, or path to .pickle file
+        """
 
         self.model_name = model
         self.style_name = style
@@ -45,8 +54,8 @@ class HWGenerator(Dataset, BasicTextDataset):
             "IAM": folder / 'files/IAM-32.pickle',
             "CVL": folder / 'files/CVL-32.pickle'}
 
-        self.model = get_model(models[model])
-        self.style_images_path = styles[style]
+        self.model = get_model(models[model])  if model in models.keys() else get_model(model)
+        self.style_images_path = styles[style] if style in styles.keys() else style
 
         self.model_path = self.model.path
         self.output_path = output_path

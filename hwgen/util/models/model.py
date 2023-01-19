@@ -1,6 +1,6 @@
 import torch
 import pandas as pd
-from .OCR_network import *
+from hwgen.models.OCR_network import *
 from torch.nn import CTCLoss, MSELoss, L1Loss
 from torch.nn.utils import clip_grad_norm_
 import random
@@ -10,7 +10,7 @@ import torchvision.models as models
 from models.transformer import *
 from .BigGAN_networks import *
 from params import *
-from .OCR_network import *
+from hwgen.models.OCR_network import *
 from models.blocks import LinearBlock, Conv2dBlock, ResBlocks, ActFirstResBlock
 from util.util import toggle_grad, loss_hinge_dis, loss_hinge_gen, ortho, default_ortho, toggle_grad, prepare_z_y, \
     make_one_hot, to_device, multiple_replace, random_word

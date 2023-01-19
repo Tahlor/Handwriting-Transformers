@@ -10,7 +10,7 @@ from PIL import Image
 from cv2 import resize
 from torch.utils.data import Dataset
 
-from hwgen.data.basic_text_dataset import BasicTextDataset
+from textgen.basic_text_dataset import BasicTextDataset
 from hwgen.data.utils import show
 
 if sys.version_info >= (3, 8):

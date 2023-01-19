@@ -1,5 +1,5 @@
 from hwgen.generators.Generator import *
-
+from hwgen.data.hw_generator import *
 
 if __name__=="__main__":
     uni = Unigrams(csv_file="./data/datasets/unigram_freq.csv")
@@ -18,8 +18,6 @@ if __name__=="__main__":
 
     g = HWGenerator(model="IAM",
                     next_text_dataset=basic_text_dataset,
-                    vocabulary=set(VOCABULARY),
-                    encoder=HWGenerator.encode,
     )
     # Get random style
     #style = next(iter(g.style_image_and_text_dataset))

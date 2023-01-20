@@ -75,7 +75,7 @@ class BaseGenerator():
 
     def render_all(self, master_list):
         for i, item in enumerate(master_list):
-            page = render.get_page_from_words(item["words"])
+            page = render.get_page_from_words(item["word_imgs"])
             cv2.imwrite(self.output_path+'/image' + str(i) + '.png', page)
         print ('\nOutput images saved in : ' + self.output_path)
 

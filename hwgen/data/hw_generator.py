@@ -99,7 +99,7 @@ class HWGenerator(Dataset, BasicTextDataset):
 
     def render_all(self, master_list):
         for i, item in enumerate(master_list):
-            page = render.get_page_from_words(item["words"])
+            page = render.get_page_from_words(item["word_imgs"])
             cv2.imwrite(self.output_path+'/image' + str(i) + '.png', page)
         print ('\nOutput images saved in : ' + self.output_path)
 
@@ -158,7 +158,7 @@ class HWGenerator(Dataset, BasicTextDataset):
 
                 # Deal with multiple words
                 words = result["raw_text"].split(" ")
-                for i, word in enumerate(result['words']):
+                for i, word in enumerate(result['word_imgs']):
                     master_list[author_id][words[i]].append(word)
 
         if save_path:

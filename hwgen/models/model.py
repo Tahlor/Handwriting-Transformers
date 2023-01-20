@@ -427,7 +427,7 @@ class TRGAN(nn.Module):
             author_id = author_ids[batch_author_idx]
             words = []
             output += [{"style_references":style_references[batch_author_idx],
-                                 "words":words,
+                                 "word_imgs":words,
                                  "author_id":author_id,
                                  "source":source,
                                  "raw_text":raw_text[batch_author_idx]}]

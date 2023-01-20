@@ -83,7 +83,7 @@ class SavedHandwriting(BasicTextDataset, Dataset):
     def _get(self,
             author=None,
             word=None):
-        word=word.strip()
+
         if author is None:
             author = self.get_random_author()
         if word is None:
@@ -91,6 +91,8 @@ class SavedHandwriting(BasicTextDataset, Dataset):
         elif self.random_ok and word not in self.dataset[author]:
             warnings.warn("Requested word not available, using random word")
             _, word = self.get_random_word_from_author(author)
+
+        word=word.strip()
 
         word_img = random.choice(self.dataset[author][word])
         if self.format=="numpy":
@@ -100,6 +102,21 @@ class SavedHandwriting(BasicTextDataset, Dataset):
                 "font": author,
                 "raw_text": word
                 }
+
+    def _batch_get(self, author_list, word_list, batch_size = None):
+        """ Temporary hack to function as a dataloader
+            In reality, we need to pass this dataset as a dataloader and create a collate function
+            See RenderImageTextPair for possible solution
+        Args:
+            author_list:
+            word_list:
+
+        Returns:
+
+        """
+        if author_list is None:
+            author_list = [None] * batch_size
+        return [self._get(author, word) for author, word in zip(author_list, word_list)]
 
     def __getitem__(self, idx):
         return self.get()
@@ -138,8 +155,12 @@ class SavedHandwriting(BasicTextDataset, Dataset):
     def render_phrase(self, max_spacing, min_spacing):
         pass
 
-
 class SavedHandwritingRandomAuthor(SavedHandwriting):
+    """ Returns {"image":word_img,
+                "font": author,
+                "raw_text": word
+                }
+    """
     def __init__(self,
                  format: Literal['numpy', 'PIL'],
                  dataset_root=None,

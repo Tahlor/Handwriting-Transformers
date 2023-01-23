@@ -19,9 +19,9 @@ folder = Path(os.path.dirname(__file__))
 
 VOCABULARY = """Only thewigsofrcvdampbkuq.A-210xT5'MDL,RYHJ"ISPWENj&BC93VGFKz();#:!7U64Q8?+*ZX/"""
 
-def get_model(model_path):
+def get_model(model_path, english_words):
     print('(2) Loading model...')
-    model = TRGAN()
+    model = TRGAN(english_words=english_words)
     model.netG.load_state_dict(torch.load(model_path))
     print(str(model_path) + ' : Model loaded Successfully')
     model.path = model_path
@@ -33,7 +33,8 @@ class HWGenerator(Dataset, BasicTextDataset):
                  model="IAM",
                  batch_size=8,
                  output_path="results",
-                 style="IAM"):
+                 style="IAM",
+                 english_words_path=None):
         """
 
         Args:
@@ -54,12 +55,13 @@ class HWGenerator(Dataset, BasicTextDataset):
             "IAM": folder / 'files/IAM-32.pickle',
             "CVL": folder / 'files/CVL-32.pickle'}
 
-        self.model = get_model(models[model])  if model in models.keys() else get_model(model)
-        self.style_images_path = styles[style] if style in styles.keys() else style
-
-        self.model_path = self.model.path
         self.output_path = output_path
         self.next_text_dataset = next_text_dataset
+
+        self.model = get_model(models[model], english_words_path) if model in models.keys() else get_model(model, english_words_path)
+        self.model_path = self.model.path
+        self.style_images_path = styles[style] if style in styles.keys() else style
+
         print ('(1) Loading style and style text next_text_dataset files...')
         self.style_image_and_text_dataset = TextDatasetval(base_path=self.style_images_path, num_examples=15)
         self.style_loader = DataLoader(

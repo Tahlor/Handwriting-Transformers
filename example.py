@@ -2,19 +2,19 @@ from hwgen.generators.Generator import *
 from hwgen.data.hw_generator import *
 
 if __name__=="__main__":
-    uni = Unigrams(csv_file="./data/datasets/unigram_freq.csv")
+    uni = Unigrams(csv_file=None) # "./data/datasets/unigram_freq.csv"
     trivial = TrivialDataset("This is some data right here")
 
     # Load novel text next_text_dataset
-    text_data = trivial
+    basic_text_dataset = trivial
 
-    basic_text_dataset = Wikipedia(
-                dataset=load_dataset("wikipedia", "20220301.en")["train"],
-                vocabulary=set(VOCABULARY),  # set(self.model.netconverter.dict.keys())
-                encode_function=Wikipedia.encode,
-                min_sentence_length=60,
-                max_sentence_length=64
-            )
+    # basic_text_dataset = Wikipedia(
+    #             dataset=load_dataset("wikipedia", "20220301.en")["train"],
+    #             vocabulary=set(VOCABULARY),  # set(self.model.netconverter.dict.keys())
+    #             encode_function=Wikipedia.encode,
+    #             min_sentence_length=60,
+    #             max_sentence_length=64
+    #         )
 
     g = HWGenerator(model="IAM",
                     next_text_dataset=basic_text_dataset,

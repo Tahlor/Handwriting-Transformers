@@ -2,19 +2,19 @@ import torch
 from pathlib import Path
 import os
 folder = Path(os.path.dirname(__file__))
-
+from hwgen.resources import HW_MODELS, HW_GENERATED, HWGEN_RESOURCES
 ###############################################
 
 EXP_NAME = "IAM-339-15-E3D3-LR0.00005-bs8"; RESUME = False
 
 DATASET = 'IAM'
 if DATASET == 'IAM':
-    DATASET_PATHS = folder / 'data/files/IAM-32.pickle'
+    DATASET_PATHS = HW_MODELS / 'IAM-32.pickle'
     NUM_WRITERS = 339
 if DATASET == 'CVL':
-    DATASET_PATHS = folder / 'data/files/CVL-32.pickle'
+    DATASET_PATHS = HW_MODELS / 'CVL-32.pickle'
     NUM_WRITERS = 283
-ENGLISH_WORDS_PATH = folder / 'data/files/english_words.txt'
+ENGLISH_WORDS_PATH = HW_MODELS / 'english_words.txt'
 
 ###############################################
 

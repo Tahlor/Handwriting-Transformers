@@ -56,6 +56,10 @@ def main(args=None):
                            batch_size=args.batch_size,
                            model="IAM")
 
+    master_list = g.generate_new_samples(style,
+                                         save_path=f"./data/datasets/synth_hw_wiki/style_{author_id}_samples_{i}.npy",
+                                         master_list=master_list)
+
     # Create a queue to hold the generated images
     image_queue = Queue(block=False, maxsize=32000)
 

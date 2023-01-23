@@ -263,7 +263,7 @@ class Generator(nn.Module):
 
 class TRGAN(nn.Module):
 
-    def __init__(self):
+    def __init__(self, english_words=None):
         super(TRGAN, self).__init__() 
         
 
@@ -315,8 +315,9 @@ class TRGAN(nn.Module):
         self.lda2 = 0
         self.KLD = 0 
 
-
-        with open(ENGLISH_WORDS_PATH, 'rb') as f:
+        if english_words is None:
+            english_words = ENGLISH_WORDS_PATH
+        with open(english_words, 'rb') as f:
             self.lex = f.read().splitlines()
         lex=[]
         for word in self.lex:

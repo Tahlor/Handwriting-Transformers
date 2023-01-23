@@ -142,10 +142,10 @@ class BaseGenerator():
 
 
 
-uni = Unigrams(csv_file="../data/datasets/unigram_freq.csv")
-trivial = TrivialDataset("This is some data right here")
-
 if __name__ == '__main__':
+    uni = Unigrams(csv_file="../data/datasets/unigram_freq.csv")
+    trivial = TrivialDataset("This is some data right here")
+
     # Load novel text next_text_dataset
     text_data = trivial
     from textgen.unigram_dataset import Unigrams

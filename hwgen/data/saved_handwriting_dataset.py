@@ -92,9 +92,9 @@ class SavedHandwriting(BasicTextDataset, Dataset):
             warnings.warn("Requested word not available, using random word")
             _, word = self.get_random_word_from_author(author)
 
-        word=word.strip()
-
         word_img = random.choice(self.dataset[author][word])
+        word = word.strip()
+
         if self.format=="numpy":
             word_img = np.array(word_img)
 

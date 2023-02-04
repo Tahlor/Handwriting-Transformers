@@ -2,6 +2,8 @@ from pathlib import Path
 import numpy as np
 from math import ceil
 from tqdm import tqdm
+from PIL import Image
+from PIL import PpmImagePlugin
 
 def chunkify(text, max_words):
     """ Chunkify a sentence based on batch_size and maximum number of words
@@ -61,6 +63,65 @@ def fix_handwriting_keys():
             for key in tqdm(keys):
                 dataset[_key][key.strip()] = _item.pop(key)
         np.save(path, dataset)
+
+
+def shape(item):
+    """
+    Args:
+        item:
+    Returns:
+        x, y
+    """
+    if isinstance(item, np.ndarray):
+        return item.shape[1],item.shape[0]
+    elif isinstance(item, (PpmImagePlugin.PpmImageFile, Image.Image)):
+        return item.size
+
+def ndim(item):
+    return len(shape(item))
+
+def channels(item):
+    if isinstance(item, np.ndarray):
+        if ndim(item)==2:
+            return 1
+        elif ndim(item)==3:
+            return item.shape[-1]
+        else:
+            raise Exception
+    elif isinstance(item, (PpmImagePlugin.PpmImageFile, Image.Image)):
+        if item.mode == "L":
+            return 1
+        elif item.mode == "RGB":
+            return 3
+        else:
+            raise Exception
+
+def display(img, n=1, *args, **kwargs):
+    if isinstance(img, list):
+        for i,im in enumerate(img):
+            if i >= n:
+                break
+            _display(im, *args, **kwargs)
+
+    else:
+        _display(img, *args, **kwargs)
+
+def _display(img, cmap="gray"):
+    # if isinstance(img, PpmImagePlugin.PpmImageFile) or isinstance(img, Image.Image):
+    #     img.show()
+    # else:
+    #
+    if isinstance(img, ImageDraw.ImageDraw):
+        img = img._image
+    if isinstance(img,list):
+        img = img[0]
+
+    fig, ax = plt.subplots(figsize=(10, 10))
+
+    if channels(img)==3:
+        cmap = None
+    ax.imshow(img, cmap=cmap)
+    plt.show()
 
 if __name__ == "__main__":
     fix_handwriting_keys()

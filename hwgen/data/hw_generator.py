@@ -15,6 +15,7 @@ from hwgen.util import render
 import random
 import warnings
 from pathlib import Path
+from hwgen import resources
 folder = Path(os.path.dirname(__file__))
 
 VOCABULARY = """Only thewigsofrcvdampbkuq.A-210xT5'MDL,RYHJ"ISPWENj&BC93VGFKz();#:!7U64Q8?+*ZX/"""
@@ -48,19 +49,17 @@ class HWGenerator(Dataset, BasicTextDataset):
         self.model_name = model
         self.style_name = style
 
-        models = {
-            "IAM": folder / 'files/iam_model.pth',
-            "CVL": folder / 'files/cvl_model.pth'}
-        styles = {
-            "IAM": folder / 'files/IAM-32.pickle',
-            "CVL": folder / 'files/CVL-32.pickle'}
-
         self.output_path = output_path
         self.next_text_dataset = next_text_dataset
 
-        self.model = get_model(models[model], english_words_path) if model in models.keys() else get_model(model, english_words_path)
+        if model in resources.models.keys():
+            resources.download_model_resources()
+            model = resources.models[model]
+
+        self.model = get_model(model, english_words_path)
+
         self.model_path = self.model.path
-        self.style_images_path = styles[style] if style in styles.keys() else style
+        self.style_images_path = resources.styles[style] if style in resources.styles.keys() else style
 
         print ('(1) Loading style and style text next_text_dataset files...')
         self.style_image_and_text_dataset = TextDatasetval(base_path=self.style_images_path, num_examples=15)

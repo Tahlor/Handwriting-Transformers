@@ -1,6 +1,6 @@
 
 from collections import defaultdict
-from hwgen.data.dataset import  TextDatasetval
+from textgen.data.dataset import  TextDatasetval
 from textgen.wikipedia_dataset import Wikipedia
 from textgen.unigram_dataset import Unigrams
 import torch
@@ -109,7 +109,7 @@ class Generator():
         if master_list is None:
             master_list = defaultdict(dict)
         for d in tqdm(self.new_text_loader):
-            eval_text_encode = d["text_encoded"].to('cuda:0')
+            eval_text_encode = d["text_encoded"].to(self.device)
             eval_len_text = d["text_encoded_l"] # [d.to('cuda:0') for d in d["text_encoded_l"]]
             m = torch.max(eval_text_encode)
             print(m)

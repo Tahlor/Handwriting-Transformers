@@ -16,3 +16,4 @@ download_resources @ git+ssh://git@github.com/tahlor/download_resources@galois#e
 textgen @ git+ssh://git@github.com/tahlor/textgen@galois#egg=textgen
 opencv-python
 apache-beam
+wandb

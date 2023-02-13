@@ -1,6 +1,6 @@
 import os
 import time
-from hwgen.data.dataset import TextDataset, TextDatasetval, Wikipedia
+from textgen.data.dataset import TextDataset, TextDatasetval, Wikipedia
 import torch
 import cv2
 import os
@@ -8,7 +8,7 @@ import numpy as np
 from hwgen.models.model import TRGAN
 from hwgen.params import *
 from torch import nn
-from hwgen.data.dataset import get_transform
+from textgen.data.dataset import get_transform
 import pickle
 from PIL import Image
 import tqdm
@@ -96,7 +96,7 @@ class Generator():
         # Each is 1 page
 
         for d in self.text_loader:
-            eval_text_encode = d["text_encoded"].to('cuda:0')
+            eval_text_encode = d["text_encoded"].to(self.device)
             eval_len_text = d["text_encoded_l"] # [d.to('cuda:0') for d in d["text_encoded_l"]]
             #for i,style in enumerate(tqdm.tqdm(self.style_loader)):
             style = next(iter(self.style_data))

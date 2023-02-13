@@ -1,6 +1,6 @@
 
 from collections import defaultdict
-from hwgen.data.dataset import  TextDatasetval
+from textgen.data.dataset import  TextDatasetval
 from textgen.wikipedia_dataset import Wikipedia
 from textgen.unigram_dataset import Unigrams
 import torch
@@ -15,22 +15,23 @@ from torch.utils.data import DataLoader
 from textgen.trivial_dataset import TrivialDataset
 from hwgen.util import render
 from hwgen.resources import *
-
+from hwgen.util.util import torch_load
 DEFAULT_MODEL = "IAM"
 DEFAULT_STYLE = "IAM"
 
-def get_model(model_path):
+def get_model(model_path, device="cuda"):
     print('(2) Loading odel...')
     model = TRGAN()
     if not Path(model_path).exists(): #and Path(model_path).relative_to(HWR_MODEL_PATH):
         download_model_resources()
-    model.netG.load_state_dict(torch.load(model_path))
+    model.netG.load_state_dict(torch_load(model_path, device))
     print(model_path + ' : Model loaded Successfully')
     model.path = model_path
     return model
 
 class BaseGenerator():
-    def __init__(self, model, next_text_dataset, batch_size=8, output_path="results"):
+    def __init__(self, model, next_text_dataset, batch_size=8, output_path="results", device=None):
+        self.device = device if device is not None else torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model = model
         self.model_path = model.path
         self.output_path = output_path
@@ -110,7 +111,7 @@ class BaseGenerator():
         if master_list is None:
             master_list = defaultdict(dict)
         for d in tqdm(self.new_text_loader):
-            eval_text_encode = d["text_encoded"].to('cuda:0')
+            eval_text_encode = d["text_encoded"].to(self.device)
             eval_len_text = d["text_encoded_l"] # [d.to('cuda:0') for d in d["text_encoded_l"]]
             m = torch.max(eval_text_encode)
             print(m)

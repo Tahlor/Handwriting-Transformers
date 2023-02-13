@@ -5,22 +5,24 @@ os.environ["WANDB_API_KEY"] = "5d9b7652deb1619596c4354a415b62d09f8d9ed0"
 
 from pathlib import Path
 import time
-import data.dataset as dataset
-from data.dataset import TextDataset, TextDatasetval
-from models import create_model
+import textgen.data.dataset as dataset
+from textgen.data.dataset import TextDataset, TextDatasetval
+from hwgen.models import create_model
 import torch
 import cv2
 import os
 import numpy as np
 from itertools import cycle
 from scipy import linalg
-from models.model import TRGAN
-from params import *
+from hwgen.models.model import TRGAN
+from hwgen.params import *
 from torch import nn
 import wandb
 
-BASEPATH = "./data/files/IAM-32.pickle"
+r"C:\Users\tarchibald\Anaconda3\envs\docgen_windows\hwgen\resources\models\"
 
+BASEPATH = "./data/files/IAM-32.pickle"
+DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 def main():
 
     wandb.init(project="handwriting-transformers", name = EXP_NAME)

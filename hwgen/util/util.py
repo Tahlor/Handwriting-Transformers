@@ -13,6 +13,13 @@ def random_word(len_word, alphabet):
     word = [alphabet[c] for c in char]
     return ''.join(word)
 
+def torch_load(model_path, device):
+    if device=="cpu":
+        warnings.warn("Loading model on CPU. This will be slow.")
+        return torch.load(model_path , map_location=torch.device(device))
+    else:
+        return torch.load(model_path)
+
 def load_network(net, save_dir, epoch):
     """Load all the networks from the disk.
 
@@ -200,7 +207,7 @@ def to_device(net, gpu_ids):
         net.to(gpu_ids[0])
         # net = torch.nn.DataParallel(net, gpu_ids)  # multi-GPUs
         if len(gpu_ids)>1:
-            net = torch.nn.DataParallel(net, device_ids=gpu_ids).cuda()
+            net = torch.nn.DataParallel(net, device_ids=gpu_ids).to(self.device)
             # net = torch.nn.DistributedDataParallel(net)
     return net
 

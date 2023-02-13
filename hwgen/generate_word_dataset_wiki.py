@@ -2,7 +2,7 @@ import os
 import time
 from collections import defaultdict
 from textgen.basic_text_dataset import BasicTextDataset
-from hwgen.data.dataset import TextDataset, TextDatasetval
+from textgen.data.dataset import TextDataset, TextDatasetval
 from textgen.wikipedia_dataset import Wikipedia
 from textgen.unigram_dataset import Unigrams
 import torch
@@ -12,7 +12,7 @@ import numpy as np
 from models.model import TRGAN
 from params import *
 from torch import nn
-from hwgen.data.dataset import get_transform
+from textgen.data.dataset import get_transform
 import pickle
 from PIL import Image
 from tqdm import tqdm
@@ -39,11 +39,12 @@ def get_model(model_path):
     return model
 
 class Generator():
-    def __init__(self, model, next_text_dataset, batch_size=8, output_path="results"):
+    def __init__(self, model, next_text_dataset, batch_size=8, output_path="results", device=None):
         self.model = model
         self.model_path = model.path
         self.output_path = output_path
         self.images_path = styles[STYLE]
+        self.device = device if device is not None else torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.next_text_dataset = next_text_dataset
         print ('(1) Loading style and style text next_text_dataset files...')
         self.style_image_and_text_dataset = TextDatasetval(base_path=self.images_path, num_examples=15)
@@ -119,13 +120,13 @@ class Generator():
         if master_list is None:
             master_list = defaultdict(dict)
         for d in tqdm(self.new_text_loader):
-            eval_text_encode = d["text_encoded"].to('cuda:0')
+            eval_text_encode = d["text_encoded"].to(self.device)
             eval_len_text = d["text_encoded_l"] # [d.to('cuda:0') for d in d["text_encoded_l"]]
             m = torch.max(eval_text_encode)
             print(m)
             _style = self.process_style(style, batch_size=eval_text_encode.shape[0])
             results =  self.model.generate_word_list(
-                style_images=_style['imgs_padded'].to(DEVICE),
+                style_images=_style['imgs_padded'].to(self.device),
                 style_lengths=_style['img_wids'],
                 style_references=_style["wcl"],
                 author_ids=_style["author_ids"],
@@ -161,7 +162,7 @@ if __name__ == '__main__':
     model = get_model(models[MODEL])
 
     if True:
-        from text_utils import VOCABULARY
+        from hwgen.data.hw_generator import VOCABULARY
         basic_text_dataset = Wikipedia(
                 dataset=load_dataset("wikipedia", "20220301.en")["train"],
                 vocabulary=set(VOCABULARY),  # set(self.model.netconverter.dict.keys())

@@ -16,6 +16,8 @@ from util.util import toggle_grad, loss_hinge_dis, loss_hinge_gen, ortho, defaul
     make_one_hot, to_device, multiple_replace, random_word
 from models.inception import InceptionV3, calculate_frechet_distance
 import cv2
+from hwgen.data.utils import sample_encoded_text
+
 
 class FCNDecoder(nn.Module):
     def __init__(self, ups=3, n_res=2, dim=512, out_dim=1, res_norm='adain', activ='relu', pad_type='reflect'):
@@ -514,10 +516,7 @@ class TRGAN(nn.Module):
                 lex.append(word)
         self.lex = lex
 
-
-        f = open('mytext.txt', 'r') 
-
-        self.text = [j.encode() for j in sum([i.split(' ') for i in f.readlines()], [])][:NUM_EXAMPLES]
+        self.text = sample_encoded_text(num_examples=NUM_EXAMPLES)
         self.eval_text_encode, self.eval_len_text = self.netconverter.encode(self.text)
         self.eval_text_encode = self.eval_text_encode.to(DEVICE).repeat(batch_size, 1, 1)
 

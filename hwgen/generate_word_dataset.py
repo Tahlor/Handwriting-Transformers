@@ -2,7 +2,7 @@ import os
 import time
 from collections import defaultdict
 from textgen.basic_text_dataset import BasicTextDataset
-from hwgen.data.dataset import TextDataset, TextDatasetval
+from textgen.data.dataset import TextDataset, TextDatasetval
 from textgen.wikipedia_dataset import Wikipedia
 from textgen.unigram_dataset import Unigrams
 import torch
@@ -12,7 +12,7 @@ import numpy as np
 from models.model import TRGAN
 from params import *
 from torch import nn
-from hwgen.data.dataset import get_transform
+from textgen.data.dataset import get_transform
 import pickle
 from PIL import Image
 from tqdm import tqdm
@@ -45,13 +45,15 @@ class Generator():
                  next_text_dataset,
                  batch_size=8,
                  output_path="results",
-                 style_data_source=STYLE_DATA_SOURCE):
+                 style_data_source=STYLE_DATA_SOURCE,
+                 device=None):
         self.style_data_source = style_data_source
         self.model = model
         self.model_name = model.name
         self.model_path = model.path
         self.output_path = output_path
         self.images_path = styles[style_data_source]
+        self.device = device if device is not None else torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.next_text_dataset = next_text_dataset
         print ('(1) Loading style and style text next_text_dataset files...')
         self.style_image_and_text_dataset = TextDatasetval(base_path=self.images_path, num_examples=15)
@@ -127,14 +129,14 @@ class Generator():
         if master_list is None:
             master_list = defaultdict(dict)
         for d in tqdm(self.new_text_loader):
-            eval_text_encode = d["text_encoded"].to('cuda:0')
+            eval_text_encode = d["text_encoded"].to(self.device)
             eval_len_text = d["text_encoded_l"] # [d.to('cuda:0') for d in d["text_encoded_l"]]
             m = torch.max(eval_text_encode)
             #print(m)
             _style = self.process_style(style, batch_size=eval_text_encode.shape[0])
             model_and_style_data_source = f"{self.model_name}_{self.style_data_source}"
             results =  self.model.generate_word_list(
-                style_images=_style['imgs_padded'].to(DEVICE),
+                style_images=_style['imgs_padded'].to(self.device),
                 style_lengths=_style['img_wids'],
                 style_references=_style["wcl"],
                 author_ids=_style["author_ids"],

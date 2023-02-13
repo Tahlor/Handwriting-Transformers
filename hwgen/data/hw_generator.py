@@ -1,6 +1,6 @@
 from collections import defaultdict
 from textgen.basic_text_dataset import BasicTextDataset
-from hwgen.data.dataset import TextDatasetval
+from textgen.data.dataset import TextDatasetval
 from textgen.wikipedia_dataset import Wikipedia
 from textgen.unigram_dataset import Unigrams
 import cv2
@@ -20,10 +20,14 @@ folder = Path(os.path.dirname(__file__))
 
 VOCABULARY = """Only thewigsofrcvdampbkuq.A-210xT5'MDL,RYHJ"ISPWENj&BC93VGFKz();#:!7U64Q8?+*ZX/"""
 
-def get_model(model_path, english_words):
+def get_model(model_path, english_words, device):
     print('(2) Loading model...')
-    model = TRGAN(english_words=english_words)
-    model.netG.load_state_dict(torch.load(model_path))
+    model = TRGAN(english_words=english_words, device=device)
+    if device=="cpu":
+        warnings.warn("Loading model on CPU. This will be slow.")
+        model.netG.load_state_dict(torch.load(model_path , map_location=torch.device(device)))
+    else:
+        model.netG.load_state_dict(torch.load(model_path))
     print(str(model_path) + ' : Model loaded Successfully')
     model.path = model_path
     return model
@@ -35,7 +39,8 @@ class HWGenerator(Dataset, BasicTextDataset):
                  batch_size=8,
                  output_path="results",
                  style="IAM",
-                 english_words_path=None):
+                 english_words_path=None,
+                 device=None):
         """
 
         Args:
@@ -45,7 +50,7 @@ class HWGenerator(Dataset, BasicTextDataset):
             output_path:
             style: IAM, CVL, or path to .pickle file
         """
-
+        self.device = device if device is not None else torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model_name = model
         self.style_name = style
 
@@ -56,7 +61,7 @@ class HWGenerator(Dataset, BasicTextDataset):
             resources.download_model_resources()
             model = resources.models[model]
 
-        self.model = get_model(model, english_words_path)
+        self.model = get_model(model, english_words_path, device=self.device)
 
         self.model_path = self.model.path
         self.style_images_path = resources.styles[style] if style in resources.styles.keys() else style
@@ -135,14 +140,14 @@ class HWGenerator(Dataset, BasicTextDataset):
         if master_list is None:
             master_list = defaultdict(dict)
         for d in tqdm(self.new_text_loader):
-            eval_text_encode = d["text_encoded"].to('cuda:0')
+            eval_text_encode = d["text_encoded"].to(self.device)
             eval_len_text = d["text_encoded_l"] # [d.to('cuda:0') for d in d["text_encoded_l"]]
             _style = self.process_style(style, batch_size=eval_text_encode.shape[0])
             m = torch.max(eval_text_encode)
             print(m)
 
             results =  self.model.generate_word_list(
-                style_images=_style['imgs_padded'].to(DEVICE),
+                style_images=_style['imgs_padded'].to(self.device),
                 style_lengths=_style['img_wids'],
                 style_references=_style["wcl"],
                 author_ids=_style["author_ids"],
@@ -176,12 +181,12 @@ class HWGenerator(Dataset, BasicTextDataset):
         Returns:
 
         """
-        eval_text_encode = data_dict["text_encoded"].to('cuda:0')
+        eval_text_encode = data_dict["text_encoded"].to(self.device)
         eval_len_text = data_dict["text_encoded_l"] # [d.to('cuda:0') for d in d["text_encoded_l"]]
         _style = self.process_style(style, batch_size=eval_text_encode.shape[0])
 
         results =  self.model.generate_word_list(
-            style_images=_style['imgs_padded'].to(DEVICE),
+            style_images=_style['imgs_padded'].to(self.device),
             style_lengths=_style['img_wids'],
             style_references=_style["wcl"],
             author_ids=_style["author_ids"],

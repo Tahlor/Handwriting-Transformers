@@ -13,10 +13,10 @@ from hwgen.params import *
 from hwgen.models.OCR_network import *
 from hwgen.models.blocks import LinearBlock, Conv2dBlock, ResBlocks, ActFirstResBlock
 from hwgen.util.util import toggle_grad, loss_hinge_dis, loss_hinge_gen, ortho, default_ortho, toggle_grad, prepare_z_y, \
-    make_one_hot, to_device, multiple_replace, random_word
+    make_one_hot, to_device, multiple_replace, random_word, torch_load
 from hwgen.models.inception import InceptionV3, calculate_frechet_distance
 from textgen.data import dataset as textgen_dataset
-
+from hwgen.data.utils import sample_encoded_text
 import cv2
 import time
 import matplotlib.pyplot as plt
@@ -64,12 +64,13 @@ class FCNDecoder(nn.Module):
 
 class Generator(nn.Module):
 
-    def __init__(self):
+    def __init__(self, device=None):
         super(Generator, self).__init__()
 
         INP_CHANNEL = NUM_EXAMPLES
-        if IS_SEQ: INP_CHANNEL = 1 
+        if IS_SEQ: INP_CHANNEL = 1
 
+        self.device = device if device is not None else torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         encoder_layer = TransformerEncoderLayer(TN_HIDDEN_DIM, TN_NHEADS, TN_DIM_FEEDFORWARD,
                                                 TN_DROPOUT, "relu", True)
@@ -179,7 +180,7 @@ class Generator(nn.Module):
 
                             
             h = hs.transpose(1, 2)[-1]#torch.cat([hs.transpose(1, 2)[-1], QR_EMB.permute(1,0,2)], -1)
-            if ADD_NOISE: h = h + self.noise.sample(h.size()).squeeze(-1).to(DEVICE)
+            if ADD_NOISE: h = h + self.noise.sample(h.size()).squeeze(-1).to(self.device)
 
             h = self.linear_q(h)
             h = h.contiguous()
@@ -238,7 +239,7 @@ class Generator(nn.Module):
                          
         h = hs.transpose(1, 2)[-1]#torch.cat([hs.transpose(1, 2)[-1], QR_EMB.permute(1,0,2)], -1)
 
-        if ADD_NOISE: h = h + self.noise.sample(h.size()).squeeze(-1).to(DEVICE)
+        if ADD_NOISE: h = h + self.noise.sample(h.size()).squeeze(-1).to(self.device)
 
         h = self.linear_q(h)
         h = h.contiguous()
@@ -263,20 +264,20 @@ class Generator(nn.Module):
 
 class TRGAN(nn.Module):
 
-    def __init__(self, english_words=None):
-        super(TRGAN, self).__init__() 
-        
+    def __init__(self, english_words=None, device=None):
+        super(TRGAN, self).__init__()
 
+        self.device = device if device is not None else torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.epsilon = 1e-7
-        self.netG = Generator().to(DEVICE)
-        self.netD = nn.DataParallel(Discriminator()).to(DEVICE)
-        self.netW = nn.DataParallel(WDiscriminator()).to(DEVICE)
+        self.netG = Generator(device=self.device).to(self.device)
+        self.netD = nn.DataParallel(Discriminator()).to(self.device)
+        self.netW = nn.DataParallel(WDiscriminator()).to(self.device)
         self.netconverter = strLabelConverter(ALPHABET)
-        self.netOCR = CRNN().to(DEVICE)
+        self.netOCR = CRNN().to(self.device)
         self.OCR_criterion = CTCLoss(zero_infinity=True, reduction='none')
 
         block_idx = InceptionV3.BLOCK_INDEX_BY_DIM[2048]
-        self.inception = InceptionV3([block_idx]).to(DEVICE)
+        self.inception = InceptionV3([block_idx]).to(self.device)
 
       
         self.optimizer_G = torch.optim.Adam(self.netG.parameters(),
@@ -329,11 +330,9 @@ class TRGAN(nn.Module):
                 lex.append(word)
         self.lex = lex
 
-
-        with (root / 'data/files/mytext.txt').open('r') as f:
-            self.text = [j.encode() for j in sum([i.split(' ') for i in f.readlines()], [])]#[:NUM_EXAMPLES]
+        self.text = sample_encoded_text(num_examples=NUM_EXAMPLES)
         self.eval_text_encode, self.eval_len_text = self.netconverter.encode(self.text)
-        self.eval_text_encode = self.eval_text_encode.to(DEVICE).repeat(batch_size, 1, 1)
+        self.eval_text_encode = self.eval_text_encode.to(self.device).repeat(batch_size, 1, 1)
 
     def save_images_for_fid_calculation(self, dataloader, epoch, mode = 'train'):
 
@@ -348,7 +347,8 @@ class TRGAN(nn.Module):
 
         for step,data in enumerate(dataloader): 
 
-            ST = data['imgs_padded'].cuda()
+            ST = data['imgs_padded'].to(self.device)
+            # ST = data['imgs_padded'].cuda()
             self.fakes = self.netG.Eval(ST, self.eval_text_encode) 
             fake_images = torch.cat(self.fakes, 1).detach().cpu().numpy()
 
@@ -785,7 +785,7 @@ class TRGAN(nn.Module):
         if self.opt.single_writer:
             load_filename = '%s_z.pkl' % (epoch)
             load_path = os.path.join(self.save_dir, load_filename)
-            self.z = torch.load(load_path)
+            self.z = torch_load(load_path, self.device)
 
     def _set_input(self, input):
         self.input = input
@@ -804,20 +804,20 @@ class TRGAN(nn.Module):
                     param.requires_grad = requires_grad
 
     def forward(self):
-        self.real = self.input['img'].to(DEVICE)
+        self.real = self.input['img'].to(self.device)
         self.label = self.input['label']
-        self.sdata = self.input['imgs_padded'].to(DEVICE)
+        self.sdata = self.input['imgs_padded'].to(self.device)
         self.ST_LEN = self.input['img_wids']
         self.text_encode, self.len_text = self.netconverter.encode(self.label)
-        self.one_hot_real = make_one_hot(self.text_encode, self.len_text, VOCAB_SIZE).to(DEVICE).detach()
-        self.text_encode = self.text_encode.to(DEVICE).detach()
+        self.one_hot_real = make_one_hot(self.text_encode, self.len_text, VOCAB_SIZE).to(self.device).detach()
+        self.text_encode = self.text_encode.to(self.device).detach()
         self.len_text = self.len_text.detach()
 
         # Choose indices of random words to be generated
         self.words = [word.encode('utf-8') for word in np.random.choice(self.lex, batch_size)]
         self.text_encode_fake, self.len_text_fake = self.netconverter.encode(self.words)
-        self.text_encode_fake = self.text_encode_fake.to(DEVICE)
-        self.one_hot_fake = make_one_hot(self.text_encode_fake, self.len_text_fake, VOCAB_SIZE).to(DEVICE)
+        self.text_encode_fake = self.text_encode_fake.to(self.device)
+        self.one_hot_fake = make_one_hot(self.text_encode_fake, self.len_text_fake, VOCAB_SIZE).to(self.device)
 
         self.text_encode_fake_js = []
 
@@ -825,7 +825,7 @@ class TRGAN(nn.Module):
 
             self.words_j = [word.encode('utf-8') for word in np.random.choice(self.lex, batch_size)]
             self.text_encode_fake_j, self.len_text_fake_j = self.netconverter.encode(self.words_j)
-            self.text_encode_fake_j = self.text_encode_fake_j.to(DEVICE)
+            self.text_encode_fake_j = self.text_encode_fake_j.to(self.device)
             self.text_encode_fake_js.append(self.text_encode_fake_j)
 
         
@@ -872,7 +872,7 @@ class TRGAN(nn.Module):
         self.loss_D = self.loss_Dreal + self.loss_Dfake
  
 
-        self.loss_w_real = self.netW(self.real.detach(), self.input['wcl'].to(DEVICE)).mean()
+        self.loss_w_real = self.netW(self.real.detach(), self.input['wcl'].to(self.device)).mean()
         # total loss
         loss_total = self.loss_D + self.loss_w_real
 
@@ -1040,7 +1040,7 @@ class TRGAN(nn.Module):
 
         self.loss_G = loss_hinge_gen(self.netD(**{'x': self.fake}), self.len_text_fake.detach(), True).mean()
 
-        self.loss_w_fake = self.netW(self.fake, self.input['wcl'].to(DEVICE)).mean()
+        self.loss_w_fake = self.netW(self.fake, self.input['wcl'].to(self.device)).mean()
 
         self.loss_G = self.loss_G + self.Lcycle1 + self.Lcycle2 + self.lda1 + self.lda2 - self.KLD
 

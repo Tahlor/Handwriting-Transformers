@@ -4,6 +4,10 @@ from math import ceil
 from tqdm import tqdm
 from PIL import Image
 from PIL import PpmImagePlugin
+import warnings
+import re
+
+file_folder = Path(__file__).parent
 
 def chunkify(text, max_words):
     """ Chunkify a sentence based on batch_size and maximum number of words
@@ -122,6 +126,24 @@ def _display(img, cmap="gray"):
         cmap = None
     ax.imshow(img, cmap=cmap)
     plt.show()
+
+
+default_vocab = """Only thewigsofrcvdampbkuq.A-210xT5'MDL,RYHJ"ISPWENj&BC93VGFKz();#:!7U64Q8?+*ZX/"""
+def sample_encoded_text(sample_file=None, num_examples=100, default_vocab=default_vocab):
+    vocab_regex = re.compile(fr"""[^{re.escape(str(default_vocab))}]*""")
+
+    if sample_file is None:
+        sample_file = Path(file_folder) / "files" / 'mytext.txt'
+
+    if sample_file.exists():
+        with sample_file.open('r') as f:
+            text = " ".join(f.readlines())
+    else:
+        text = "Sphinx of black quartz: judge my vow."
+        warnings.warn("No sample text file '/hwgen/data/files/mytext.txt' found. Using default text.")
+    filtered_text = vocab_regex.sub("", text)
+    encoded_text = [word.encode() for word in filtered_text.split(" ")][:num_examples]
+    return encoded_text
 
 if __name__ == "__main__":
     fix_handwriting_keys()

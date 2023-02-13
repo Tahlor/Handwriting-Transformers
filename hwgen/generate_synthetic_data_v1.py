@@ -24,10 +24,11 @@ styles = {"IAM": 'data/files/IAM-32.pickle', "CVL": 'data/files/CVL-32.pickle'}
 
 
 class Generator():
-    def __init__(self, output_path="results"):
+    def __init__(self, output_path="results", device=None):
         self.output_path = output_path
         self.model_path = models[MODEL]
         self.images_path = styles[STYLE]
+        self.device = device if device is not None else torch.device("cuda" if torch.cuda.is_available() else "cpu")
         #self.model_path = 'data/files/cvl_model.pth'; self.style_images_path = 'data/files/CVL-32.pickle' #(cvl)
         #self.model_path = 'data/files/iam_model.pth'; self.style_images_path = 'data/files/CVL-32.pickle' #(iam-cvl-cross)
         #self.model_path = 'data/files/cvl_model.pth'; self.style_images_path = 'data/files/IAM-32.pickle' #(cvl-iam-cross)#
@@ -96,12 +97,12 @@ class Generator():
         # Each is 1 page
 
         for d in self.text_loader:
-            eval_text_encode = d["text_encoded"].to('cuda:0')
+            eval_text_encode = d["text_encoded"].to(self.device)
             eval_len_text = d["text_encoded_l"] # [d.to('cuda:0') for d in d["text_encoded_l"]]
             #for i,style in enumerate(tqdm.tqdm(self.style_loader)):
             style = next(iter(self.style_data))
             master_list += self.model.generate_word_list(
-                style_images=style['imgs_padded'].to(DEVICE),
+                style_images=style['imgs_padded'].to(self.device),
                 style_lengths=style['img_wids'],
                 style_references=style["wcl"],
                 author_ids=style["author_ids"],

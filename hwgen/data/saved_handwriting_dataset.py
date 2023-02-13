@@ -9,6 +9,7 @@ import numpy as np
 from PIL import Image
 from cv2 import resize
 from torch.utils.data import Dataset
+from hwgen import resources
 
 from textgen.basic_text_dataset import BasicTextDataset
 from hwgen.data.utils import show
@@ -17,6 +18,10 @@ if sys.version_info >= (3, 8):
     from typing import Literal
 else:
     from typing_extensions import Literal
+
+import logging
+#logger = logging.getLogger("root")
+logger = logging.getLogger(__name__)
 
 class SavedHandwriting(BasicTextDataset, Dataset):
     """ !!! This should inherit from the same thing as the font renderer?
@@ -43,9 +48,9 @@ class SavedHandwriting(BasicTextDataset, Dataset):
 
         super().__init__(self.dataset)
         self.format = format
+
         if dataset_path == "sample":
-            from hwgen.resources import download_handwriting
-            dataset_path = download_handwriting()
+            dataset_path = resources.download_handwriting()
 
         self.random_ok = random_ok
         self.conversion = conversion
@@ -148,7 +153,9 @@ class SavedHandwriting(BasicTextDataset, Dataset):
 
         if not self.conversion is None:
             img_dict["image"] = self.conversion(img_dict["image"])
-        img_dict["raw_text"] = word
+
+        if word != img_dict["raw_text"]:
+            img_dict["requested_word"] = word
 
         return img_dict
 
@@ -173,16 +180,11 @@ class SavedHandwritingRandomAuthor(SavedHandwriting):
         """ Each batch will be all the same author
             Switch to new author every switch_frequency number of words
         """
-        if dataset_root == "sample":
-            from hwgen.resources import download_handwriting
-            dataset_root = Path(download_handwriting()).parent
-        elif dataset_root == "eng_latest":
-            from hwgen.resources import download_handwriting_zip
-            dataset_root = download_handwriting_zip()
-
-        self.dataset_root = Path(dataset_root)
+        self.dataset_root, self.data_files = resources.download_model(dataset_root)
         assert self.dataset_root.is_dir()
-        self.data_files = list(self.dataset_root.rglob("*.npy"))
+        if not self.data_files:
+            self.data_files = list(self.dataset_root.rglob("*.npy"))
+
         self.switch_frequency = switch_frequency
         if not self.data_files:
             raise Exception("No handwriting data files found")
@@ -199,7 +201,7 @@ class SavedHandwritingRandomAuthor(SavedHandwriting):
     def next_author(self):
         self.dataset_path = self.dataset_queue.pop() if self.dataset_queue else self.reset()
         self.dataset = np.load(self.dataset_path, allow_pickle=True).item()
-        print("Next author")
+        logger.debug("Next author")
 
     def reset(self):
         self.dataset_queue = self.data_files.copy()
@@ -215,6 +217,9 @@ class SavedHandwritingRandomAuthor(SavedHandwriting):
         return self._get(author, word)
 
 
+def download_all_hw_styles():
+    from hwgen.resources import download_handwriting_zip
+    return download_handwriting_zip()
 
 if __name__ == '__main__':
     dataset = SavedHandwriting("./datasets/synth_hw/style_298_samples_0.npy")

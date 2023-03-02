@@ -391,15 +391,15 @@ class TRGAN(nn.Module):
 
         return self.real_base, self.fake_base
 
-    def generate_word_list(self,style_images,
-                                style_lengths,
-                                style_references,
-                                author_ids,
-                                raw_text,
-                                eval_text_encode=None,
-                                eval_len_text=None,
-                                source=""
-                            ):
+    def generate_word_list(self, style_images,
+                           style_lengths,
+                           style_references,
+                           author_ids,
+                           text_dict,
+                           eval_text_encode=None,
+                           eval_len_text=None,
+                           source="",
+                           ):
         """
 
         Args:
@@ -421,24 +421,21 @@ class TRGAN(nn.Module):
         output = []
         # fake_[batch_idx
         batch_size = eval_text_encode.shape[0]
+        untensor_dict = self.untensor_dict(text_dict)
         for batch_author_idx in range(batch_size):
             # Different length stuff
             _eval_len_text=eval_len_text if torch.is_tensor(eval_len_text) else eval_len_text[batch_author_idx]
 
             author_id = author_ids[batch_author_idx]
             words = []
-            output += [{"style_references":style_references[batch_author_idx],
+            out = {"style_references":style_references[batch_author_idx],
                                  "word_imgs":words,
                                  "author_id":author_id,
                                  "source":source,
-                                 "raw_text":raw_text[batch_author_idx]}]
+                                 }
+            out.update(self.unbatch_dict(untensor_dict, batch_author_idx))
+            output.append(out)
 
-            if False:
-                word_index = 0
-                author_index = 0
-                channel = 0
-                width = _eval_len_text[word_index]*resolution
-                plt.imshow(self.fakes[word_index][author_index,channel,:,:width].cpu().numpy()); plt.show()
             for idx, _ in enumerate(self.fakes):
                 if idx >= _eval_len_text.shape[0]:
                     continue
@@ -447,6 +444,35 @@ class TRGAN(nn.Module):
 
         # plt.imshow(word_l[0]); plt.show()
         return output
+
+    def untensor_dict(self, text_dict):
+        """
+
+        Args:
+            text_dict:
+
+        Returns:
+
+        """
+        for key, value in text_dict.items():
+            if torch.is_tensor(value):
+                text_dict[key] = value.detach().cpu().numpy()
+        return text_dict
+
+    def unbatch_dict(self, text_dict, idx):
+        """
+
+        Args:
+            text_dict:
+            idx:
+
+        Returns:
+
+        """
+        out = {}
+        for key, value in text_dict.items():
+            out[key] = value[idx]
+        return out
 
     def plot_word_list(self, words):
         for w in words:

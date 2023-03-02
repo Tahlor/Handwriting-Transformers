@@ -1,7 +1,7 @@
 
 from collections import defaultdict
 from textgen.data.dataset import  TextDatasetval
-from textgen.wikipedia_dataset import Wikipedia
+from textgen.wikipedia_dataset import WikipediaEncodedTextDataset
 from textgen.unigram_dataset import Unigrams
 import torch
 import cv2
@@ -25,7 +25,7 @@ def get_model(model_path, device="cuda"):
     if not Path(model_path).exists(): #and Path(model_path).relative_to(HWR_MODEL_PATH):
         download_model_resources()
     model.netG.load_state_dict(torch_load(model_path, device))
-    print(model_path + ' : Model loaded Successfully')
+    print(f'{model_path} : Model loaded Successfully')
     model.path = model_path
     return model
 
@@ -121,7 +121,7 @@ class BaseGenerator():
                 style_lengths=_style['img_wids'],
                 style_references=_style["wcl"],
                 author_ids=_style["author_ids"],
-                raw_text=d["text_raw"],
+                raw_text=d["text"],
                 eval_text_encode=eval_text_encode,
                 eval_len_text=eval_len_text,
                 source=f"{DEFAULT_MODEL}_{DEFAULT_STYLE}"
@@ -154,7 +154,7 @@ if __name__ == '__main__':
 
     if True:
         from hwgen.utils import VOCABULARY
-        basic_text_dataset = Wikipedia(
+        basic_text_dataset = WikipediaEncodedTextDataset(
                 dataset=load_dataset("wikipedia", "20220301.en")["train"],
                 vocabulary=set(VOCABULARY),  # set(self.model.netconverter.dict.keys())
                 encode_function=model.netconverter.encode,

@@ -8,7 +8,7 @@ if __name__=="__main__":
     # Load novel text next_text_dataset
     basic_text_dataset = trivial
 
-    # basic_text_dataset = Wikipedia(
+    # basic_text_dataset = WikipediaEncodedTextDataset(
     #             dataset=load_dataset("wikipedia", "20220301.en")["train"],
     #             vocabulary=set(VOCABULARY),  # set(self.model.netconverter.dict.keys())
     #             encode_function=Wikipedia.encode,

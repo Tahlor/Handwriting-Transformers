@@ -3,7 +3,7 @@ import time
 from collections import defaultdict
 from textgen.basic_text_dataset import BasicTextDataset
 from textgen.data.dataset import TextDataset, TextDatasetval
-from textgen.wikipedia_dataset import Wikipedia
+from textgen.wikipedia_dataset import WikipediaEncodedTextDataset
 from textgen.unigram_dataset import Unigrams
 import torch
 import cv2
@@ -130,7 +130,7 @@ class Generator():
                 style_lengths=_style['img_wids'],
                 style_references=_style["wcl"],
                 author_ids=_style["author_ids"],
-                raw_text=d["text_raw"],
+                raw_text=d["text"],
                 eval_text_encode=eval_text_encode,
                 eval_len_text=eval_len_text,
                 source=f"{MODEL}_{STYLE}"
@@ -163,7 +163,7 @@ if __name__ == '__main__':
 
     if True:
         from hwgen.data.hw_generator import VOCABULARY
-        basic_text_dataset = Wikipedia(
+        basic_text_dataset = WikipediaEncodedTextDataset(
                 dataset=load_dataset("wikipedia", "20220301.en")["train"],
                 vocabulary=set(VOCABULARY),  # set(self.model.netconverter.dict.keys())
                 encode_function=model.netconverter.encode,

@@ -1,7 +1,7 @@
 from collections import defaultdict
 from textgen.basic_text_dataset import BasicTextDataset
 from textgen.data.dataset import TextDatasetval
-from textgen.wikipedia_dataset import Wikipedia
+from textgen.wikipedia_dataset import WikipediaEncodedTextDataset
 from textgen.unigram_dataset import Unigrams
 import cv2
 import numpy as np
@@ -16,7 +16,13 @@ import random
 import warnings
 from pathlib import Path
 from hwgen import resources
+from torch.nn.parallel import DataParallel
+
 folder = Path(os.path.dirname(__file__))
+"""
+This file contains the code for pre-generating handwriting from text.
+"""
+
 
 VOCABULARY = """Only thewigsofrcvdampbkuq.A-210xT5'MDL,RYHJ"ISPWENj&BC93VGFKz();#:!7U64Q8?+*ZX/"""
 
@@ -37,26 +43,32 @@ class HWGenerator(Dataset, BasicTextDataset):
                  next_text_dataset,
                  model="IAM",
                  batch_size=8,
+                 sequence_length=16,
                  output_path="results",
                  style="IAM",
                  english_words_path=None,
-                 device=None):
-        """
+                 device=None,
+                 words_before_new_style=1000):
+        """ Why does this inherit from BasicTextDataset?
+            This should not be a dataloader, should not be batched
 
         Args:
             next_text_dataset: a BasicTextDataset that produces the text the generator will generate as HW
             model: IAM or CVL or path to .pth file
-            batch_size:
+            batch_size: how many "lines" to produce
+            sequence_length: how many words to sample for one "line"; some text generators already have this set
             output_path:
             style: IAM, CVL, or path to .pickle file
         """
         self.device = device if device is not None else torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model_name = model
         self.style_name = style
-
+        self.batch_size = batch_size
+        self.sequence_length = sequence_length
         self.output_path = output_path
         self.next_text_dataset = next_text_dataset
-
+        self.words_before_new_style = 1000
+        self.current_style_id = 0
         if model in resources.models.keys():
             resources.download_model_resources()
             model = resources.models[model]
@@ -128,7 +140,8 @@ class HWGenerator(Dataset, BasicTextDataset):
         return _style
 
     def generate_new_samples(self, style=None, save_path=None, master_list=None):
-        """
+        """ this is actuall the whole eval loop
+            new_text_loaded is already batched
 
         Args:
             style (int or dict with imgs_padded, img_wids, wcl, author_ids):
@@ -151,7 +164,7 @@ class HWGenerator(Dataset, BasicTextDataset):
                 style_lengths=_style['img_wids'],
                 style_references=_style["wcl"],
                 author_ids=_style["author_ids"],
-                raw_text=d["text_raw"],
+                raw_text=d["text"],
                 eval_text_encode=eval_text_encode,
                 eval_len_text=eval_len_text,
                 source=f"{self.model_name}_{self.style_name}"
@@ -171,18 +184,18 @@ class HWGenerator(Dataset, BasicTextDataset):
             np.save(save_path, master_list, allow_pickle=True)
         return master_list
 
-    def process_batch(self, data_dict, style=None, save_path=None, master_list=None):
+    def process_batch(self, text_dict, style=None):
         """
 
         Args:
+            text_dict (dict):
             style (int or dict with imgs_padded, img_wids, wcl, author_ids):
-            save_path:
 
         Returns:
 
         """
-        eval_text_encode = data_dict["text_encoded"].to(self.device)
-        eval_len_text = data_dict["text_encoded_l"] # [d.to('cuda:0') for d in d["text_encoded_l"]]
+        eval_text_encode = text_dict["text_encoded"].to(self.device)
+        eval_len_text = text_dict["text_encoded_l"] # [d.to('cuda:0') for d in d["text_encoded_l"]]
         _style = self.process_style(style, batch_size=eval_text_encode.shape[0])
 
         results =  self.model.generate_word_list(
@@ -190,74 +203,71 @@ class HWGenerator(Dataset, BasicTextDataset):
             style_lengths=_style['img_wids'],
             style_references=_style["wcl"],
             author_ids=_style["author_ids"],
-            raw_text=data_dict["text_raw"],
+            text_dict=text_dict,
             eval_text_encode=eval_text_encode,
             eval_len_text=eval_len_text,
             source=f"{self.model_name}_{self.style_name}"
         )
         for i, result in enumerate(results):
             author_id = f"{result['author_id']}_{self.model_name}_{self.style_name}"
-            result.update({"author_id": author_id})
+            result.update({"text_list": text_dict["text_list"][i],
+                           "author_id": author_id}
+                          )
             yield result
 
     def __len__(self):
-        return len(self.dataset)
+        return len(self.next_text_dataset)
 
     def get_random_author(self):
-        return random.choice(list(self.dataset.keys()))
+        author_id = self.style_image_and_text_dataset.random_author()
+        return author_id
 
-    def get_random_word_from_author(self, author=None):
-        if author is None:
-            author = self.get_random_author()
-        return author, random.choice(list(self.dataset[author].keys()))
+    def get_random_word(self):
+        word_idx = random.randint(0, len(self.next_text_dataset)-1)
+        return self.next_text_dataset[word_idx]
 
-    def __getitem__(self, idx):
-        return self.get()
+    def get_style(self, author_style_id=None):
+        if author_style_id is None and self.word_idx % self.words_before_new_style < self.prev_word_idx:
+            author_style_id = self.current_style_id = self.get_random_author()
+        else:
+            author_style_id = self.current_style_id
+        self.prev_word_idx = self.word_idx
+        return self.style_image_and_text_dataset.get_one_author(n=self.batch_size, author_id=author_id)
 
-    def render_word(self, word,
-                    font=None,
-                    size=None,
-                    conversion=None,
-                    *args,
-                    **kwargs):
+    def get(self, author_style_id=None):
         """
 
         Args:
-            word:
-            font (str): author_id
-            size (int)
+            data_dict: {"text": readable text,
+                "text_encoded": (index? encoding over alphabet),
+                "text_encoded_l": (lengths)}
+            author_style_id:
+
         Returns:
 
         """
-        img_dict = self.get(word=word,
-                            author=font
-                            )
-        if not self.conversion is None:
-            img_dict["image"] = self.conversion(img_dict["image"])
+        for data_dict in self.new_text_loader:
+            for item in self.process_batch(data_dict, style=author_style_id):
+                yield item
 
-        return img_dict
+    def get_data_dict_from_word_list(self, word_list, author_style_id=None):
+        raise Exception("Not implemented")
+        eval_text_encode, eval_len_text = self.encode(word_list)
+        seq_length = min(self.max_seq_length, 1+remaining_words // self.batch_size)
+        for i in range(0, len(word_list), seq_length):
+            yield {"text": " ".join(word_list[i:i+seq_length]),
+                   "text_encoded": eval_text_encode[i:i+seq_length],
+                   "text_encoded_l": eval_len_text[i:i+seq_length]}
 
+    def __iter__(self):
+        for item in self.get():
+            yield item
 
-    def get(self,
-            author=None,
-            word=None):
-        if author is None:
-            author = self.get_random_author()
-        if word is None:
-            _, word = self.get_random_word_from_author(author)
-        elif self.random_ok and word not in self.dataset[author]:
-            warnings.warn("Requested word not available, using random word")
-            _, word = self.get_random_word_from_author(author)
+    def __next__(self):
+        return next(self.get())
 
-        word_img = random.choice(self.dataset[author][word])
-
-        return {"image":word_img,
-                "font": author,
-                }
-
-    def __getitem__(self, idx):
-        return self.get()
-
+    def __getitem__(self, item):
+        return next(self.get())
 
 """
 g.model.netconverter.decode(torch.tensor([80]),torch.tensor([1]))
@@ -270,7 +280,7 @@ if __name__ == '__main__':
     # Load novel text next_text_dataset
     text_data = trivial
 
-    basic_text_dataset = Wikipedia(
+    basic_text_dataset = WikipediaEncodedTextDataset(
                 dataset=load_dataset("wikipedia", "20220301.en")["train"],
                 vocabulary=set(VOCABULARY),  # set(self.model.netconverter.dict.keys())
                 encode_function=Wikipedia.encode,

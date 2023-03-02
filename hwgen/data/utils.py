@@ -2,7 +2,7 @@ from pathlib import Path
 import numpy as np
 from math import ceil
 from tqdm import tqdm
-from PIL import Image
+from PIL import Image, ImageDraw
 from PIL import PpmImagePlugin
 import warnings
 import re

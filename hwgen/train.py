@@ -19,7 +19,7 @@ from hwgen.params import *
 from torch import nn
 import wandb
 
-r"C:\Users\tarchibald\Anaconda3\envs\docgen_windows\hwgen\resources\models\"
+r"C:\Users\tarchibald\Anaconda3\envs\docgen_windows\hwgen\resources\models"
 
 BASEPATH = "./data/files/IAM-32.pickle"
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")

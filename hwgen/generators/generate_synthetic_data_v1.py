@@ -1,6 +1,6 @@
 import os
 import time
-from textgen.data.dataset import TextDataset, TextDatasetval, Wikipedia
+from textgen.data.dataset import TextDataset, TextDatasetval, WikipediaEncodedTextDataset
 import torch
 import cv2
 import os
@@ -50,7 +50,7 @@ class Generator():
         print (self.model_path+' : Model loaded Successfully')
 
         # Load novel text next_text_dataset
-        self.text_data = Wikipedia(
+        self.text_data = WikipediaEncodedTextDataset(
             dataset=load_dataset("wikipedia", "20220301.en")["train"],
             vocabulary=set(ALPHABET), # set(self.model.netconverter.dict.keys())
             encode_function=self.model.netconverter.encode,
@@ -105,7 +105,7 @@ class Generator():
                 style_lengths=style['img_wids'],
                 style_references=style["wcl"],
                 author_ids=style["author_ids"],
-                raw_text=d["text_raw"],
+                raw_text=d["text"],
                 eval_text_encode=eval_text_encode,
                 eval_len_text=eval_len_text,
                 source=f"{MODEL}_{STYLE}"

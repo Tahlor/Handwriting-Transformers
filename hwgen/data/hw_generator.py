@@ -1,3 +1,4 @@
+import traceback
 from collections import defaultdict
 from textgen.basic_text_dataset import BasicTextDataset
 from textgen.data.dataset import TextDatasetval
@@ -94,7 +95,7 @@ class HWGenerator(Dataset, BasicTextDataset):
             shuffle=False,
             num_workers=0,
             pin_memory=True,
-            drop_last=False,
+            drop_last=True,
             collate_fn=next_text_dataset.collate_fn,)
 
         item = next(iter(self.new_text_loader))
@@ -261,7 +262,11 @@ class HWGenerator(Dataset, BasicTextDataset):
 
     def __iter__(self):
         for item in self.get():
-            yield item
+            try:
+                yield item
+            except:
+                traceback.print_exc()
+                continue
 
     def __next__(self):
         return next(self.get())

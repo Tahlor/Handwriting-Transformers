@@ -417,7 +417,14 @@ class TRGAN(nn.Module):
             eval_len_text = self.eval_len_text
 
         #print(style_images.shape, eval_text_encode.shape)
-        self.fakes = self.netG.Eval(style_images, eval_text_encode) # 52 x [8,1,32,160] ; [Batch, Channel, Line_Height, Line_Width]
+        try:
+            self.fakes = self.netG.Eval(style_images, eval_text_encode) # 52 x [8,1,32,160] ; [Batch, Channel, Line_Height, Line_Width]
+        except:
+            print("Error in generating fakes")
+            print(style_images.shape, eval_text_encode.shape)
+            print(eval_text_encode)
+            return None
+
         output = []
         # fake_[batch_idx
         batch_size = eval_text_encode.shape[0]

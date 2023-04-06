@@ -1,3 +1,4 @@
+from hwgen.util.util import get_available_gpus
 import traceback
 from collections import defaultdict
 from textgen.basic_text_dataset import BasicTextDataset
@@ -27,14 +28,21 @@ This file contains the code for pre-generating handwriting from text.
 
 VOCABULARY = """Only thewigsofrcvdampbkuq.A-210xT5'MDL,RYHJ"ISPWENj&BC93VGFKz();#:!7U64Q8?+*ZX/"""
 
-def get_model(model_path, english_words, device):
+def get_model(model_path, english_words, device, gpu_ids="all"):
     print('(2) Loading model...')
     model = TRGAN(english_words=english_words, device=device)
     if device=="cpu":
         warnings.warn("Loading model on CPU. This will be slow.")
         model.netG.load_state_dict(torch.load(model_path , map_location=torch.device(device)))
     else:
-        model.netG.load_state_dict(torch.load(model_path))
+        state_dict = torch.load('model.pth')
+        model.netG.load_state_dict(state_dict)
+
+        if gpu_ids:
+            if gpu_ids == "all":
+                gpu_ids = get_available_gpus()
+            model = torch.nn.DataParallel(model, device_ids=gpu_ids)
+
     print(str(model_path) + ' : Model loaded Successfully')
     model.path = model_path
     return model

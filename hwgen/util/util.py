@@ -6,6 +6,8 @@ from PIL import Image
 import os
 import torch.nn.functional as F
 from torch.autograd import Variable
+import warnings
+import GPUtil
 
 def random_word(len_word, alphabet):
     # generate a word constructed from len_word characters where each character is randomly chosen from the alphabet.
@@ -201,13 +203,13 @@ class Distribution(torch.Tensor):
         return new_obj
 
 
-def to_device(net, gpu_ids):
+def to_device(net, gpu_ids, device='cuda'):
     if len(gpu_ids) > 0:
         assert(torch.cuda.is_available())
         net.to(gpu_ids[0])
         # net = torch.nn.DataParallel(net, gpu_ids)  # multi-GPUs
         if len(gpu_ids)>1:
-            net = torch.nn.DataParallel(net, device_ids=gpu_ids).to(self.device)
+            net = torch.nn.DataParallel(net, device_ids=gpu_ids).to(device)
             # net = torch.nn.DistributedDataParallel(net)
     return net
 
@@ -316,3 +318,24 @@ def mkdir(path):
     """
     if not os.path.exists(path):
         os.makedirs(path)
+
+
+def get_available_gpus():
+    try:
+        # get all available GPUs
+        gpus = GPUtil.getGPUs()
+
+        # create a list to store the available devices that meet the conditions
+        available_devices = []
+
+        # loop through all available GPUs
+        for gpu in gpus:
+            # check if the GPU memory usage and core utilization are both under 50%
+            if gpu.memoryUtil < 50 and gpu.load < 50:
+                # if the conditions are met, add the GPU ID to the list of available devices
+                available_devices.append(gpu.id)
+
+        print("Available GPUs:", available_devices)
+        return available_devices
+    except:
+        return None

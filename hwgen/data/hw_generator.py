@@ -35,12 +35,13 @@ def get_model(model_path, english_words, device, gpu_ids="all"):
         warnings.warn("Loading model on CPU. This will be slow.")
         model.netG.load_state_dict(torch.load(model_path , map_location=torch.device(device)))
     else:
-        state_dict = torch.load('model.pth')
+        state_dict = torch.load(model_path)
         model.netG.load_state_dict(state_dict)
 
         if gpu_ids:
             if gpu_ids == "all":
                 gpu_ids = get_available_gpus()
+            print("Using GPUs: {}".format(gpu_ids))
             model = torch.nn.DataParallel(model, device_ids=gpu_ids)
 
     print(str(model_path) + ' : Model loaded Successfully')

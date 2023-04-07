@@ -219,11 +219,15 @@ class HWGenerator(Dataset, BasicTextDataset):
             source=f"{self.model_name}_{self.style_name}"
         )
         for i, result in enumerate(results):
-            author_id = f"{result['author_id']}_{self.model_name}_{self.style_name}"
-            result.update({"text_list": text_dict["text_list"][i],
-                           "author_id": author_id}
-                          )
-            yield result
+            try:
+                author_id = f"{result['author_id']}_{self.model_name}_{self.style_name}"
+                result.update({"text_list": text_dict["text_list"][i],
+                               "author_id": author_id}
+                              )
+                yield result
+            except Exception as e:
+                print(e)
+
 
     def __len__(self):
         return len(self.next_text_dataset)

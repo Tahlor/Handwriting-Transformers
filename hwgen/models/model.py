@@ -266,7 +266,7 @@ class TRGAN(nn.Module):
 
     def __init__(self, english_words=None, device=None):
         super(TRGAN, self).__init__()
-
+        print(f"TRGAN device: {device}")
         self.device = device if device is not None else torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.epsilon = 1e-7
         self.netG = Generator(device=self.device).to(self.device)

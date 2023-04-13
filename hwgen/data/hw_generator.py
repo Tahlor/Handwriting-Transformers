@@ -58,7 +58,8 @@ class HWGenerator(Dataset, BasicTextDataset):
                  style="IAM",
                  english_words_path=None,
                  device=None,
-                 words_before_new_style=1000):
+                 words_before_new_style=1000,
+                 data_split="all"):
         """ Why does this inherit from BasicTextDataset?
             This should not be a dataloader, should not be batched
 
@@ -69,6 +70,7 @@ class HWGenerator(Dataset, BasicTextDataset):
             sequence_length: how many words to sample for one "line"; some text generators already have this set
             output_path:
             style: IAM, CVL, or path to .pickle file
+            data_split: train OR test OR all for style images
         """
         self.device = device if device is not None else torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model_name = model
@@ -89,7 +91,9 @@ class HWGenerator(Dataset, BasicTextDataset):
         self.style_images_path = resources.styles[style] if style in resources.styles.keys() else style
 
         print ('(1) Loading style and style text next_text_dataset files...')
-        self.style_image_and_text_dataset = TextDatasetval(base_path=self.style_images_path, num_examples=15)
+        self.style_image_and_text_dataset = TextDatasetval(base_path=self.style_images_path,
+                                                           num_examples=15,
+                                                           data_split=data_split)
         self.style_loader = DataLoader(
             self.style_image_and_text_dataset,
             batch_size=batch_size,
@@ -241,10 +245,11 @@ class HWGenerator(Dataset, BasicTextDataset):
         return self.next_text_dataset[word_idx]
 
     def get_style(self, author_style_id=None):
-        if author_style_id is None and self.word_idx % self.words_before_new_style < self.prev_word_idx:
-            author_style_id = self.current_style_id = self.get_random_author()
-        else:
-            author_style_id = self.current_style_id
+        author_style_id = self.current_style_id
+        if isinstance(self.words_before_new_style, int):
+            if author_style_id is None and self.word_idx % self.words_before_new_style < self.prev_word_idx:
+                author_style_id = self.current_style_id = self.get_random_author()
+
         self.prev_word_idx = self.word_idx
         return self.style_image_and_text_dataset.get_one_author(n=self.batch_size, author_id=author_id)
 

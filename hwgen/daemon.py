@@ -2,7 +2,7 @@ import threading
 import queue
 
 class Daemon(threading.Thread):
-    def __init__(self, data_iterator, buffer_size=1000):
+    def __init__(self, data_iterator, buffer_size=5000):
         super().__init__()
         self.buffer_size = buffer_size
         self.queue = queue.Queue(maxsize=buffer_size)

@@ -168,7 +168,7 @@ class TextDatasetval():
     def __init__(self, base_path = DATASET_PATHS,
                  num_examples = 15,
                  target_transform=None,
-                 shuffle=True,
+                 shuffle_authors=True,
                  preset_author=None
                  ):
         
@@ -187,7 +187,7 @@ class TextDatasetval():
         
         self.collate_fn = TextCollator()
         self.preset_author = preset_author
-        self.shuffle = shuffle
+        self.shuffle_authors = shuffle_authors
 
     def __len__(self):
         return len(self.author_ids)
@@ -207,7 +207,7 @@ class TextDatasetval():
         """
         if not self.preset_author is None:
             author_id = self.preset_author
-        elif author_id is None and self.shuffle: # always do a random author if shuffle is on
+        elif author_id is None and self.shuffle_authors: # always do a random author if shuffle is on
             author_id = self.random_author()
 
         index = self.author_id_to_index[author_id]

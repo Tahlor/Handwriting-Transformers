@@ -58,8 +58,10 @@ class HWGenerator(Dataset, BasicTextDataset):
                  style="IAM",
                  english_words_path=None,
                  device=None,
-                 words_before_new_style=1000,
-                 data_split="all"):
+                 mix_styles_each_batch=False,
+                 iterations_before_new_style=100,
+                 data_split="all",
+                 ):
         """ Why does this inherit from BasicTextDataset?
             This should not be a dataloader, should not be batched
 
@@ -71,6 +73,9 @@ class HWGenerator(Dataset, BasicTextDataset):
             output_path:
             style: IAM, CVL, or path to .pickle file
             data_split: train OR test OR all for style images
+            iterations_before_new_style: how many words to generate before switching to a new style image; None will never switch
+                if mix_styles_each_batch is True, this will be ignored
+
         """
         self.device = device if device is not None else torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model_name = model
@@ -79,7 +84,8 @@ class HWGenerator(Dataset, BasicTextDataset):
         self.sequence_length = sequence_length
         self.output_path = output_path
         self.next_text_dataset = next_text_dataset
-        self.words_before_new_style = 1000
+        self.iterations_before_new_style = iterations_before_new_style
+        self.mix_styles_each_batch = mix_styles_each_batch
         self.current_style_id = 0
         if model in resources.models.keys():
             resources.download_model_resources()
@@ -93,11 +99,13 @@ class HWGenerator(Dataset, BasicTextDataset):
         print ('(1) Loading style and style text next_text_dataset files...')
         self.style_image_and_text_dataset = TextDatasetval(base_path=self.style_images_path,
                                                            num_examples=15,
-                                                           data_split=data_split)
+                                                           data_split=data_split,
+                                                           shuffle_authors=self.mix_styles_each_batch,
+                                                           iterations_before_new_author=self.iterations_before_new_style)
         self.style_loader = DataLoader(
             self.style_image_and_text_dataset,
             batch_size=batch_size,
-            shuffle=True,
+            shuffle=self.mix_styles_each_batch,
             num_workers=0,
             pin_memory=True,
             drop_last=True,
@@ -143,7 +151,6 @@ class HWGenerator(Dataset, BasicTextDataset):
 
     def process_style(self, style, batch_size):
         if style is None:
-            assert self.style_image_and_text_dataset.shuffle # this should always be true, but needed if using next(iter())
             _style = next(iter(self.style_loader))
         elif isinstance(style, dict):
             # If at the end of novel text dataset, might need to truncate styles used
@@ -226,8 +233,13 @@ class HWGenerator(Dataset, BasicTextDataset):
             try:
                 author_id = f"{result['author_id']}_{self.model_name}_{self.style_name}"
                 result.update({"text_list": text_dict["text_list"][i],
-                               "author_id": author_id}
+                               "author_id": author_id,
+                               "text_list_decode_vocab": text_dict["text_list_decode_vocab"][i],
+                               }
                               )
+                if len(result["text_list"]) != len(result["text_list_decode_vocab"]):
+                    warnings.warn("Text List and Decode Text List are UNEQUAL")
+                    continue
                 yield result
             except Exception as e:
                 print(e)
@@ -240,18 +252,25 @@ class HWGenerator(Dataset, BasicTextDataset):
         author_id = self.style_image_and_text_dataset.random_author()
         return author_id
 
+    def get_next_author(self, author_id):
+        return self.style_image_and_text_dataset.next_author(author_id)
+
     def get_random_word(self):
         word_idx = random.randint(0, len(self.next_text_dataset)-1)
         return self.next_text_dataset[word_idx]
 
-    def get_style(self, author_style_id=None):
+    def get_style_ids(self, author_style_id=None):
+        raise NotImplementedError
+        if author_style_id:
+            return self.style_image_and_text_dataset.get_one_author(n=self.batch_size, author_id=author_style_id)
+
         author_style_id = self.current_style_id
-        if isinstance(self.words_before_new_style, int):
-            if author_style_id is None and self.word_idx % self.words_before_new_style < self.prev_word_idx:
-                author_style_id = self.current_style_id = self.get_random_author()
+        if author_style_id is None:
+            author_style_id = self.get_random_author()
 
         self.prev_word_idx = self.word_idx
-        return self.style_image_and_text_dataset.get_one_author(n=self.batch_size, author_id=author_id)
+        return author_style_id
+        # return self.style_image_and_text_dataset.get_one_author(n=self.batch_size, author_id=author_style_id)
 
     def get(self, author_style_id=None):
         """

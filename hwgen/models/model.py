@@ -419,10 +419,10 @@ class TRGAN(nn.Module):
         #print(style_images.shape, eval_text_encode.shape)
         try:
             self.fakes = self.netG.Eval(style_images, eval_text_encode) # 52 x [8,1,32,160] ; [Batch, Channel, Line_Height, Line_Width]
-        except:
-            print("Error in generating fakes")
+        except Exception as e:
+            print(f"Error in generating fakes \n {e}")
             print(style_images.shape, eval_text_encode.shape)
-            print(eval_text_encode)
+            #print(eval_text_encode)
             return None
 
         output = []

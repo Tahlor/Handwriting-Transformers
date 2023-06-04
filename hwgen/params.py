@@ -1,20 +1,30 @@
 import torch
 from pathlib import Path
 import os
+import site
+
 folder = Path(os.path.dirname(__file__))
-from hwgen.resources import HW_MODELS, HW_GENERATED, HWGEN_RESOURCES
 ###############################################
 
 EXP_NAME = "IAM-339-15-E3D3-LR0.00005-bs8"; RESUME = False
 
-DATASET = 'IAM'
-if DATASET == 'IAM':
-    DATASET_PATHS = HW_MODELS / 'IAM-32.pickle'
-    NUM_WRITERS = 339
-if DATASET == 'CVL':
-    DATASET_PATHS = HW_MODELS / 'CVL-32.pickle'
-    NUM_WRITERS = 283
-ENGLISH_WORDS_PATH = HW_MODELS / 'english_words.txt'
+### DEFAULTS -- these can be overriden by hwgen.resources
+HWGEN_RESOURCES = Path(site.getsitepackages()[0]) / "hwgen/resources"
+HW_MODELS = HWGEN_RESOURCES / "models"
+HW_MODELS.mkdir(exist_ok=True, parents=True)
+
+def set_globals(hw_model_path=HW_MODELS, dataset='IAM'):
+    global DATASET, DATASET_PATHS, NUM_WRITERS, ENGLISH_WORDS_PATH
+    DATASET = dataset
+    if DATASET == 'IAM':
+        DATASET_PATHS = hw_model_path / 'IAM-32.pickle'
+        NUM_WRITERS = 339
+    if DATASET == 'CVL':
+        DATASET_PATHS = hw_model_path / 'CVL-32.pickle'
+        NUM_WRITERS = 283
+    ENGLISH_WORDS_PATH = hw_model_path / 'english_words.txt'
+
+set_globals()
 
 ###############################################
 

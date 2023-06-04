@@ -17,8 +17,9 @@ from hwgen.util import render
 import random
 import warnings
 from pathlib import Path
-from hwgen import resources
+from hwgen.resources import HandwritingResourceManager
 from torch.nn.parallel import DataParallel
+import site
 
 folder = Path(os.path.dirname(__file__))
 """
@@ -48,10 +49,11 @@ def get_model(model_path, english_words, device, gpu_ids="all"):
     model.path = model_path
     return model
 
-class HWGenerator(Dataset, BasicTextDataset):
+class HWGenerator(Dataset): # BasicTextDataset
     def __init__(self,
                  next_text_dataset,
                  model="IAM",
+                 model_path=Path(site.getsitepackages()[0]) / "hwgen/resources",
                  batch_size=8,
                  sequence_length=16,
                  output_path="results",
@@ -68,6 +70,7 @@ class HWGenerator(Dataset, BasicTextDataset):
         Args:
             next_text_dataset: a BasicTextDataset that produces the text the generator will generate as HW
             model: IAM or CVL or path to .pth file
+            model_folder: if somewhere other than in the environment site package folder
             batch_size: how many "lines" to produce
             sequence_length: how many words to sample for one "line"; some text generators already have this set
             output_path:
@@ -87,11 +90,17 @@ class HWGenerator(Dataset, BasicTextDataset):
         self.iterations_before_new_style = iterations_before_new_style
         self.mix_styles_each_batch = mix_styles_each_batch
         self.current_style_id = 0
-        if model in resources.models.keys():
-            resources.download_model_resources()
-            model = resources.models[model]
 
-        self.model = get_model(model, english_words_path, device=self.device)
+        resources = HandwritingResourceManager(hwgen_resource_path=model_path, english_words_path=english_words_path)
+        if model in resources.models.keys():
+            model_path = Path(resources.models[model])
+            if not model_path.exists():
+                resources.download_model_resources()
+        else:
+            model_path = Path(model)
+        english_words_path = resources.english_words_path
+        
+        self.model = get_model(model_path, english_words_path, device=self.device)
 
         self.model_path = self.model.path
         self.style_images_path = resources.styles[style] if style in resources.styles.keys() else style
@@ -229,20 +238,23 @@ class HWGenerator(Dataset, BasicTextDataset):
             eval_len_text=eval_len_text,
             source=f"{self.model_name}_{self.style_name}"
         )
-        for i, result in enumerate(results):
-            try:
-                author_id = f"{result['author_id']}_{self.model_name}_{self.style_name}"
-                result.update({"text_list": text_dict["text_list"][i],
-                               "author_id": author_id,
-                               "text_list_decode_vocab": text_dict["text_list_decode_vocab"][i],
-                               }
-                              )
-                if len(result["text_list"]) != len(result["text_list_decode_vocab"]):
-                    warnings.warn("Text List and Decode Text List are UNEQUAL")
-                    continue
-                yield result
-            except Exception as e:
-                print(e)
+        if results:
+            for i, result in enumerate(results):
+                try:
+                    author_id = f"{result['author_id']}_{self.model_name}_{self.style_name}"
+                    result.update({"text_list": text_dict["text_list"][i],
+                                   "author_id": author_id,
+                                   "text_list_decode_vocab": text_dict["text_list_decode_vocab"][i],
+                                   }
+                                  )
+                    if len(result["text_list"]) != len(result["text_list_decode_vocab"]):
+                        warnings.warn("Text List and Decode Text List are UNEQUAL")
+                        continue
+                    yield result
+                except Exception as e:
+                    print(e)
+        else:
+            warnings.warn("No results returned")
 
 
     def __len__(self):

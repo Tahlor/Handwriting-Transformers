@@ -8,6 +8,7 @@ except ImportError:
     print("warning: pypandoc module not found, could not convert Markdown to RST")
     read_md = lambda f: open(f, 'r').read()
 
+
 import os
 
 with open('requirements.txt') as f:
@@ -15,7 +16,7 @@ with open('requirements.txt') as f:
 print(requirements)
 
 setup(name='hwgen',
-      version='0.0.82',
+      version='0.0.83',
       description='hwgen',
       long_description= "" if not os.path.isfile("README.md") else read_md('README.md'),
       author='Taylor Archibald',

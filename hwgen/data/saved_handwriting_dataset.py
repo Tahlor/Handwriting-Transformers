@@ -9,7 +9,7 @@ import numpy as np
 from PIL import Image
 from cv2 import resize
 from torch.utils.data import Dataset
-from hwgen import resources
+from hwgen.resources import HandwritingResourceManager
 
 from textgen.basic_text_dataset import BasicTextDataset
 from hwgen.data.utils import show
@@ -180,6 +180,7 @@ class SavedHandwritingRandomAuthor(SavedHandwriting):
         """ Each batch will be all the same author
             Switch to new author every switch_frequency number of words
         """
+        resources = HandwritingResourceManager(hwgen_resource_path=dataset_root)
         self.dataset_root, self.data_files = resources.download_model(dataset_root)
         assert self.dataset_root.is_dir()
         if not self.data_files:

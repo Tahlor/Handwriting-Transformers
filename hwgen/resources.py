@@ -27,6 +27,7 @@ class HandwritingResourceManager:
             self.hwgen_resource_path = self.hwgen_package_resource_path
         else:
             self.hwgen_resource_path = Path(hwgen_resource_path)
+        self.logger.info(f"Resource path: {self.hwgen_resource_path}")
 
         self.hw_models = self.hwgen_resource_path / "models"
         self.hw_generated = self.hwgen_resource_path / "generated"

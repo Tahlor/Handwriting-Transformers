@@ -38,6 +38,8 @@ class HandwritingResourceManager:
         if english_words_path is None:
             if (self.hwgen_resource_path / "english_words.txt").exists():
                 self.english_words_path = self.hwgen_resource_path / "english_words.txt"
+            elif (self.hw_models / "english_words.txt").exists():
+                self.english_words_path = self.hw_models / "english_words.txt"
 
         if link_resources:
             if not self.hwgen_package_resource_path.exists():

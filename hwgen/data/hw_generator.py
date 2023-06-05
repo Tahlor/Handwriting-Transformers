@@ -49,16 +49,19 @@ def get_model(model_path, english_words, device, gpu_ids="all"):
     model.path = model_path
     return model
 
-class HWGenerator(Dataset): # BasicTextDataset
+
+
+class _HWGenerator(Dataset): # BasicTextDataset
     def __init__(self,
                  next_text_dataset,
-                 model="IAM",
-                 model_path=Path(site.getsitepackages()[0]) / "hwgen/resources",
+                 model_path,
+                 style_path,
+                 english_words_path=None,
+                 model_name=None,
+                 style_name=None,
                  batch_size=8,
                  sequence_length=16,
                  output_path="results",
-                 style="IAM",
-                 english_words_path=None,
                  device=None,
                  mix_styles_each_batch=False,
                  iterations_before_new_style=100,
@@ -81,8 +84,8 @@ class HWGenerator(Dataset): # BasicTextDataset
 
         """
         self.device = device if device is not None else torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.model_name = model
-        self.style_name = style
+        self.model_name = model_name if model_name else Path(model_path).stem
+        self.style_name = style_name if style_name else Path(style_path).stem
         self.batch_size = batch_size
         self.sequence_length = sequence_length
         self.output_path = output_path
@@ -91,19 +94,9 @@ class HWGenerator(Dataset): # BasicTextDataset
         self.mix_styles_each_batch = mix_styles_each_batch
         self.current_style_id = 0
 
-        resources = HandwritingResourceManager(hwgen_resource_path=model_path, english_words_path=english_words_path)
-        if model in resources.models.keys():
-            model_path = Path(resources.models[model])
-            if not model_path.exists():
-                resources.download_model_resources()
-        else:
-            model_path = Path(model)
-        english_words_path = resources.english_words_path
-        
         self.model = get_model(model_path, english_words_path, device=self.device)
-
         self.model_path = self.model.path
-        self.style_images_path = resources.styles[style] if style in resources.styles.keys() else style
+        self.style_images_path = style_path
 
         print ('(1) Loading style and style text next_text_dataset files...')
         self.style_image_and_text_dataset = TextDatasetval(base_path=self.style_images_path,
@@ -322,6 +315,47 @@ class HWGenerator(Dataset): # BasicTextDataset
 
     def __getitem__(self, item):
         return next(self.get())
+
+class HWGenerator(_HWGenerator):  # BasicTextDataset
+
+    def __init__(self,
+                 *args,
+                 model="IAM",
+                 resource_folder=None,
+                 style="IAM",
+                 english_words_path=None,
+                 **kwargs,
+                 ):
+        """ Why does this inherit from BasicTextDataset?
+            This should not be a dataloader, should not be batched
+
+        Args:
+            next_text_dataset: a BasicTextDataset that produces the text the generator will generate as HW
+            model: IAM or CVL or path to .pth file
+            model_folder: if somewhere other than in the environment site package folder
+            batch_size: how many "lines" to produce
+            sequence_length: how many words to sample for one "line"; some text generators already have this set
+            output_path:
+            style: IAM, CVL, or path to .pickle file
+            data_split: train OR test OR all for style images
+            iterations_before_new_style: how many words to generate before switching to a new style image; None will never switch
+                if mix_styles_each_batch is True, this will be ignored
+
+        """
+        if resource_folder is None:
+            resource_folder = Path(site.getsitepackages()[0]) / "hwgen/resources/models"
+        resources = HandwritingResourceManager(hwgen_resource_path=resource_folder,
+                                               english_words_path=english_words_path)
+        if model in resources.models.keys():
+            model_path = Path(resources.models[model])
+            if not model_path.exists():
+                resources.download_model_resources()
+        else:
+            model_path = Path(model)
+        english_words_path = resources.english_words_path
+        self.style_images_path = resources.styles[style] if style in resources.styles.keys() else style
+        super().__init__(*args, model_name=model, model_path=model_path, style_name=style, style_path=self.style_images_path, **kwargs)
+
 
 """
 g.model.netconverter.decode(torch.tensor([80]),torch.tensor([1]))

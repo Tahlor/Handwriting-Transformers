@@ -97,22 +97,25 @@ class HandwritingResourceManager:
         """
         return s3_download(s3_path=s3_hwr_models, local_path=self.hw_models, overwrite=overwrite, is_zip=False, is_s3_folder=True)
 
-    def download_model(self, model_name):
-        if model_name == "sample":
+    def download_saved_hw(self, model_name_or_path, recursive=False):
+
+
+        if model_name_or_path == "sample":
             dataset_root = Path(self.download_handwriting()).parent
             dataset_files = list(dataset_root.glob("*.npy"))
-        elif model_name in s3_generated_handwriting_paths.keys():
-            dataset_root = self.download_handwriting_zip(version=model_name)
+        elif model_name_or_path in s3_generated_handwriting_paths.keys():
+            dataset_root = self.download_handwriting_zip(version=model_name_or_path)
             dataset_files = list(dataset_root.rglob("*.npy"))
-        elif model_name in ["IAM+CVL", "eng_latest"]:
-            paths = self.download_handwriting_zip_set(model_name)
+        elif model_name_or_path in ["IAM+CVL", "eng_latest"]:
+            paths = self.download_handwriting_zip_set(model_name_or_path)
             dataset_files = []
             for path in paths:
                 if path.exists():
                     dataset_files += list(path.rglob("*.npy"))
             dataset_root = self.hw_generated
         else:
-            return Path(model_name), None
+            dataset_root = model_name_or_path
+            dataset_files = list(dataset_root.rglob("*.npy"))
         return dataset_root, dataset_files
 
 

@@ -18,7 +18,7 @@ if sys.version_info >= (3, 8):
     from typing import Literal
 else:
     from typing_extensions import Literal
-
+import site
 import logging
 #logger = logging.getLogger("root")
 logger = logging.getLogger(__name__)
@@ -180,8 +180,10 @@ class SavedHandwritingRandomAuthor(SavedHandwriting):
         """ Each batch will be all the same author
             Switch to new author every switch_frequency number of words
         """
+        if dataset_root is None:
+            dataset_root = Path(site.getsitepackages()[0]) / r"/hwgen/resources/generated"
         resources = HandwritingResourceManager(hwgen_resource_path=dataset_root)
-        self.dataset_root, self.data_files = resources.download_model(dataset_root)
+        self.dataset_root, self.data_files = resources.download_saved_hw(dataset_root)
         assert self.dataset_root.is_dir()
         if not self.data_files:
             self.data_files = list(self.dataset_root.rglob("*.npy"))

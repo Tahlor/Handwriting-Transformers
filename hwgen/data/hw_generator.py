@@ -3,7 +3,7 @@ import traceback
 from collections import defaultdict
 from textgen.basic_text_dataset import BasicTextDataset
 from textgen.data.dataset import TextDatasetval
-from textgen.wikipedia_dataset import WikipediaEncodedTextDataset
+from textgen.wikipedia_dataset import WikipediaEncodedTextDataset, WikipediaWord
 from textgen.unigram_dataset import Unigrams
 import cv2
 import numpy as np
@@ -277,7 +277,7 @@ class _HWGenerator(Dataset): # BasicTextDataset
         return author_style_id
         # return self.style_image_and_text_dataset.get_one_author(n=self.batch_size, author_id=author_style_id)
 
-    def get(self, author_style_id=None):
+    def get(self, author_style_id=None, size=None, **kwargs):
         """
 
         Args:
@@ -287,11 +287,31 @@ class _HWGenerator(Dataset): # BasicTextDataset
             author_style_id:
 
         Returns:
+            dict:
+                dict_keys(['style_references', 'word_imgs', 'author_id', 'source', 'text_raw', 'text_list_decode_vocab', 'text', 'text_list', 'text_encoded', 'text_encoded_l'])
 
+                Example:
+                    style_references: tensor(303.) (style idx 303)
+                    word_imgs: [(32, 64), (32, 32), (32,160)]
+                    author_id: 030_IAM_IAM
+                    source: IAM_IAM
+                    text_raw: peut se téléporter
+                    text_list_decode_vocab: ['peut', 'se', 'téléporter\n']
+                    text: peut se teleporter
+                    text_list: ['peut', 'se', 'teleporter\n']
+                    text_encoded: Type = <class 'numpy.ndarray'>, Shape = (3, 14)
+                    text_encoded_l: Type = <class 'torch.Tensor'>, Shape = torch.Size([3])
         """
         for data_dict in self.new_text_loader:
             for item in self.process_batch(data_dict, style=author_style_id):
+                if size:
+                    item["word_imgs"] = [self.resize_to_height_numpy(word_img, height=size) for word_img in item["word_imgs"]]
                 yield item
+
+    def resize_to_height_numpy(self, img, height):
+        width = int(img.shape[1] * height / img.shape[0])
+        return cv2.resize(img, (width, height))
+
 
     def get_data_dict_from_word_list(self, word_list, author_style_id=None):
         raise Exception("Not implemented")
@@ -347,11 +367,17 @@ class HWGenerator(_HWGenerator):  # BasicTextDataset
         resources = HandwritingResourceManager(hwgen_resource_path=resource_folder,
                                                english_words_path=english_words_path)
         if model in resources.models.keys():
-            model_path = Path(resources.models[model])
+            if kwargs.get("model_path"):
+                model_path = Path(kwargs["model_path"])
+            else:
+                model_path = Path(resources.models[model])
             if not model_path.exists():
                 resources.download_model_resources()
         else:
             model_path = Path(model)
+        if "model_path" in kwargs:
+            del kwargs['model_path']
+
         english_words_path = resources.english_words_path
         self.style_images_path = resources.styles[style] if style in resources.styles.keys() else style
         super().__init__(*args, model_name=model, model_path=model_path, style_name=style, style_path=self.style_images_path, **kwargs)
@@ -361,25 +387,17 @@ class HWGenerator(_HWGenerator):  # BasicTextDataset
 g.model.netconverter.decode(torch.tensor([80]),torch.tensor([1]))
 """
 
-if __name__ == '__main__':
-    uni = Unigrams(csv_file="./data/datasets/unigram_freq.csv")
-    trivial = TrivialDataset("This is some data right here")
-
-    # Load novel text next_text_dataset
-    text_data = trivial
-
+def wikipedia_generate():
     basic_text_dataset = WikipediaEncodedTextDataset(
                 dataset=load_dataset("wikipedia", "20220301.en")["train"],
                 vocabulary=set(VOCABULARY),  # set(self.model.netconverter.dict.keys())
-                encode_function=Wikipedia.encode,
+                encode_function=WikipediaWord.encode,
                 min_sentence_length=60,
                 max_sentence_length=64
             )
-
     g = HWGenerator(model="IAM",
                     next_text_dataset=basic_text_dataset,
                     vocabulary=set(VOCABULARY),
-                    encoder=HWGenerator.encode,
     )
     # Get random style
     #style = next(iter(g.style_image_and_text_dataset))
@@ -394,4 +412,41 @@ if __name__ == '__main__':
         master_list = g.generate_new_samples(style, save_path=f"./data/datasets/synth_hw_wiki/style_{author_id}_samples_{i}.npy", master_list=master_list)
         i+=1
         print(i)
+
+def get_dataset(datatype):
+    if datatype == "wikipedia":
+        raise NotImplementedError
+    elif datatype == "unigram":
+        return Unigrams(csv_file="./data/datasets/unigram_freq.csv")
+    elif datatype == "trivial":
+        return BasicTextDataset(TrivialDataset("This is some data right here"))
+    else:
+        raise Exception("Unknown datatype")
+    """
+        render_text_pair_gen = HWGenerator(next_text_dataset=dataset,
+                                       batch_size=1,
+                                       model=opts.saved_hw_model,
+                                       resource_folder=opts.saved_hw_model_folder,
+                                       device=opts.device,
+                                       style=opts.saved_hw_model,
+                                       )
+    """
+
+def simple_generate():
+    import os
+    from hwgen.data.utils import show, display
+    from textgen.basic_text_dataset import BasicTextDataset
+    from textgen.trivial_dataset import TrivialDataset
+    os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
+    dataset = BasicTextDataset(TrivialDataset("T-his is -- some -- data right --- here"))
+    render_text_pair_gen = iter(HWGenerator(next_text_dataset=dataset,
+                                       batch_size=1))
+    x = next(render_text_pair_gen)
+
+if __name__ == '__main__':
+    simple_generate()
+
+
+
+
 

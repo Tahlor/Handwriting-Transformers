@@ -98,13 +98,11 @@ class HandwritingResourceManager:
         return s3_download(s3_path=s3_hwr_models, local_path=self.hw_models, overwrite=overwrite, is_zip=False, is_s3_folder=True)
 
     def download_saved_hw(self, model_name_or_path, recursive=False):
-
-
         if model_name_or_path == "sample":
             dataset_root = Path(self.download_handwriting()).parent
             dataset_files = list(dataset_root.glob("*.npy"))
         elif model_name_or_path in s3_generated_handwriting_paths.keys():
-            dataset_root = self.download_handwriting_zip(version=model_name_or_path)
+            dataset_root = Path(self.download_handwriting_zip(version=model_name_or_path))
             dataset_files = list(dataset_root.rglob("*.npy"))
         elif model_name_or_path in ["IAM+CVL", "eng_latest"]:
             paths = self.download_handwriting_zip_set(model_name_or_path)
@@ -114,18 +112,18 @@ class HandwritingResourceManager:
                     dataset_files += list(path.rglob("*.npy"))
             dataset_root = self.hw_generated
         else:
-            dataset_root = model_name_or_path
+            dataset_root = Path(model_name_or_path)
             dataset_files = list(dataset_root.rglob("*.npy"))
         return dataset_root, dataset_files
 
 
 # Handwriting Models
-s3_hwr_models = "s3://datascience-computervision-l3apps/HWR/synthetic-data/python-package-resources/handwriting-models"
+s3_hwr_models = "s3://acom-datascience-trex/l3apps/synthetic-data/python-package-resources/handwriting-models"
 
 # Pregenerate Handwriting
-s3_hw_sample = "s3://datascience-computervision-l3apps/HWR/synthetic-data/python-package-resources/generated-handwriting/single-word-datasets/iam-cvl-32px-top10k-words/style_600_IAM_IAM_samples.npy"
-s3_hw_cvl = "s3://datascience-computervision-l3apps/HWR/synthetic-data/python-package-resources/generated-handwriting/single-word-datasets/iam-cvl-32px-top10k-words/CVL.zip"
-s3_hw_iam = "s3://datascience-computervision-l3apps/HWR/synthetic-data/python-package-resources/generated-handwriting/single-word-datasets/iam-cvl-32px-top10k-words/IAM.zip"
+s3_hw_sample = "s3://acom-datascience-trex/l3apps/synthetic-data/python-package-resources/generated-handwriting/single-word-datasets/iam-cvl-32px-top10k-words/style_600_IAM_IAM_samples.npy"
+s3_hw_cvl = "s3://acom-datascience-trex/l3apps/synthetic-data/python-package-resources/generated-handwriting/single-word-datasets/iam-cvl-32px-top10k-words/CVL.zip"
+s3_hw_iam = "s3://acom-datascience-trex/l3apps/synthetic-data/python-package-resources/generated-handwriting/single-word-datasets/iam-cvl-32px-top10k-words/IAM.zip"
 
 s3_generated_handwriting_paths = {"CVL": s3_hw_cvl, "IAM": s3_hw_iam}
 

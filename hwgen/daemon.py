@@ -4,6 +4,42 @@ import logging
 
 logging.basicConfig(level=logging.DEBUG, format='(%(threadName)-9s) %(message)s',)
 
+class DaemonBrokenMaybe(threading.Thread):
+    def __init__(self, data_iterator, buffer_size=5000):
+        super().__init__()
+        self.buffer_size = buffer_size
+        self.queue = queue.Queue(maxsize=buffer_size)
+        self.stop_event = threading.Event()
+        self.data_iterator = data_iterator
+        self.iterations = 0
+
+    def run(self):
+        while not self.stop_event.is_set():
+            try:
+                item = next(self.data_iterator, None)
+                if item is None:
+                    break  # End of iterator
+                self.iterations += 1
+                self.queue.put(item)  # This will block if the queue is full
+                size = self.queue.qsize()
+                if size % 100 == 0:
+                    print("QUEUE SIZE: ", size)
+            except Exception as e:
+                print("Daemon error!")
+                print(f"Iterations: {self.iterations} Queue size: {self.queue.qsize()}")
+                print(e)
+                break
+
+    def stop(self):
+        self.stop_event.set()
+
+    def exit_cleanly(self):
+        while not self.queue.empty():
+            self.queue.get()
+            self.queue.task_done()
+        #self.queue.join()
+        #self.join()
+
 class Daemon(threading.Thread):
     def __init__(self, data_iterator, buffer_size=5000):
         super().__init__()
@@ -33,7 +69,6 @@ class Daemon(threading.Thread):
 
     def stop(self):
         self.stop_event.set()
-
 
 
 import multiprocessing

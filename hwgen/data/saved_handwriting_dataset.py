@@ -87,7 +87,11 @@ class SavedHandwriting(BasicTextDataset, Dataset):
 
     def _get(self,
             author=None,
-            word=None):
+            word=None,
+            size=None):
+
+        if size is None:
+            size = self.font_size
 
         if author is None:
             author = self.get_random_author()
@@ -100,6 +104,10 @@ class SavedHandwriting(BasicTextDataset, Dataset):
         word_img = random.choice(self.dataset[author][word])
         word = word.strip()
 
+        # Resize
+        if not size is None:
+            word_img = self.resize_to_height_numpy(word_img, height=size)
+
         if self.format=="numpy":
             word_img = np.array(word_img)
 
@@ -107,6 +115,10 @@ class SavedHandwriting(BasicTextDataset, Dataset):
                 "font": author,
                 "raw_text": word
                 }
+
+    def resize_img(self, img, height):
+        width = int(img.shape[1] * height / img.shape[0])
+        return resize(img, [width, height])
 
     def _batch_get(self, author_list, word_list, batch_size = None):
         """ Temporary hack to function as a dataloader
@@ -180,8 +192,12 @@ class SavedHandwritingRandomAuthor(SavedHandwriting):
         """ Each batch will be all the same author
             Switch to new author every switch_frequency number of words
         """
+        dataset_root = Path(dataset_root)
         if dataset_root is None:
             dataset_root = Path(site.getsitepackages()[0]) / r"/hwgen/resources/generated"
+        elif dataset_root.is_file():
+            raise Exception("dataset_root must be a directory")
+            
         resources = HandwritingResourceManager(hwgen_resource_path=dataset_root)
         self.dataset_root, self.data_files = resources.download_saved_hw(dataset_root)
         assert self.dataset_root.is_dir()
@@ -211,13 +227,26 @@ class SavedHandwritingRandomAuthor(SavedHandwriting):
         random.shuffle(self.dataset_queue)
         return self.dataset_queue.pop()
 
+    def set_author(self, author):
+        if Path(author).is_file():
+            self.dataset_path = author
+        else:
+            self.dataset_path = self.dataset_root / author.with_suffix(".npy")
+
+        self.dataset = np.load(self.dataset_path, allow_pickle=True).item()
+        logger.debug("Next author")
+
     def get(self,
-            author,
-            word):
-        self.global_step +=1
-        if self.global_step % self.switch_frequency == 0:
+            author=None,
+            word=None,
+            size=None,
+            **kwargs):
+        self.global_step += 1
+        if not author is None:
+            self.set_author(author)
+        elif self.global_step % self.switch_frequency == 0:
             self.next_author()
-        return self._get(author, word)
+        return self._get(author, word, size=size)
 
 
 def download_all_hw_styles():

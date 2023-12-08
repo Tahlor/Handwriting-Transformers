@@ -6,6 +6,8 @@ from PIL import Image, ImageDraw
 from PIL import PpmImagePlugin
 import warnings
 import re
+from torch import Tensor
+from matplotlib import pyplot as plt
 
 file_folder = Path(__file__).parent
 
@@ -54,8 +56,23 @@ def combine_results():
     """
     pass
 
-def show(img):
+def show(img, title=None):
     from matplotlib import pyplot as plt
+    # if CHW change it to HWC
+    if isinstance(img, np.ndarray):
+        if len(img.shape) == 3 and img.shape[0] in (1,3):
+            img = img.transpose(1, 2, 0)
+    elif isinstance(img, Tensor):
+        img = img.to("cpu")
+        if len(img.shape) == 4:
+            img = img.squeeze(0)
+        if len(img.shape) == 2:
+            img = img.unsqueeze(0)
+        img = img.permute(1, 2, 0)
+    
+    if title:
+        plt.title(title)
+        
     plt.imshow(img, cmap="gray")
     plt.show()
 
@@ -144,6 +161,7 @@ def sample_encoded_text(sample_file=None, num_examples=100, default_vocab=defaul
     filtered_text = vocab_regex.sub("", text)
     encoded_text = [word.encode() for word in filtered_text.split(" ")][:num_examples]
     return encoded_text
+
 
 if __name__ == "__main__":
     fix_handwriting_keys()

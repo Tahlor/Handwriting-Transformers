@@ -1,3 +1,4 @@
+import multiprocessing
 import threading
 import queue
 import logging
@@ -50,29 +51,42 @@ class Daemon(threading.Thread):
         self.iterations = 0
 
     def run(self):
-        for item in self.data_iterator:
-            try:
-                # Add the item to the queue. This will block if the queue is full.
-                self.iterations += 1
-                self.queue.put(item)
-                size = self.queue.qsize()
-                if size % 100 == 0:
-                    print("QUEUE SIZE: ", size)
-                if self.stop_event.is_set():
-                    print("Daemon stopped!")
-                    print(f"Iterations: {self.iterations} Queue size: {size}")
-                    return
-            except Exception as e:
-                print("Daemon error!")
-                print(f"Iterations: {self.iterations} Queue size: {size}")
-                print(e)
+        try:
+            for item in self.data_iterator:
+                try:
+                    if self.stop_event.is_set():
+                        break
+                    self.iterations += 1
+                    self.queue.put(item)  # This will block if the queue is full
+                    size = self.queue.qsize()
+                    if size % 100 == 0:
+                        print("QUEUE SIZE: ", size)
+                except Exception as e:
+                    print("Daemon error!")
+                    print(f"Iterations: {self.iterations} Queue size: {self.queue.qsize()}")
+                    print(e)
+        except Exception as e:
+            print(e)
+        finally:
+            self.cleanup()
 
     def stop(self):
         self.stop_event.set()
+        self.empty_queue()  # Call to empty the queue
 
+    def empty_queue(self):
+        # Empty the queue
+        while not self.queue.empty():
+            self.queue.get()
+            self.queue.task_done()
 
-import multiprocessing
-import threading
+    def cleanup(self):
+        # Close the data iterator if it's a generator
+        if hasattr(self.data_iterator, 'close'):
+            self.data_iterator.close()
+
+        print(f"Cleaning up generator")
+
 
 class Daemon2(multiprocessing.Process):  # Changed from threading.Thread to multiprocessing.Process
     def __init__(self, data_iterator, buffer_size=5000):

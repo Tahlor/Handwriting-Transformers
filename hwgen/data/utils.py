@@ -56,7 +56,7 @@ def combine_results():
     """
     pass
 
-def show(img, title=None):
+def show(img, title=None, save_path=None):
     from matplotlib import pyplot as plt
     # if CHW change it to HWC
     if isinstance(img, np.ndarray):
@@ -68,13 +68,19 @@ def show(img, title=None):
             img = img.squeeze(0)
         if len(img.shape) == 2:
             img = img.unsqueeze(0)
-        img = img.permute(1, 2, 0)
+        img = img.permute(1, 2, 0).numpy()
     
     if title:
         plt.title(title)
-        
     plt.imshow(img, cmap="gray")
-    plt.show()
+    
+    if save_path:
+        #plt.imsave(save_path, img, cmap="gray")
+        plt.savefig(save_path)
+        plt.close()
+    else:
+        plt.show()
+    
 
 def fix_handwriting_keys():
     for path in Path("/home/taylor/anaconda3/datasets/HANDWRITING_WORD_DATA").rglob("*.npy"):
